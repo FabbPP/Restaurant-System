@@ -1,6 +1,7 @@
 # Restaurant-System
 # Despliegue
 Tecnologia DJANGO Y HTML
+Preparado para subir a github pages 
 
 # Diseño del Sistema
 ## Requerimientos
