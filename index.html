@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Restaurant System - CRUD Meseros y Mesas</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>Restaurant System</h1>
+      <p> Gestion de organizacion (Meseros y mesas)</p>
+    </header>
+
+    <main class="app-main">
+      <section class="card" aria-labelledby="mesas-title">
+        <div class="card-header">
+          <h2 id="mesas-title">Mesas</h2>
+          <button id="mesa-reset" class="secondary" type="button">Limpiar datos</button>
+        </div>
+
+        <form id="mesa-form" class="form-grid">
+          <label>
+            Numero
+            <input id="mesa-numero" name="mesa-numero" type="number" min="1" step="1" required />
+          </label>
+          <label>
+            Capacidad
+            <input id="mesa-capacidad" name="mesa-capacidad" type="number" min="1" step="1" required />
+          </label>
+          <label>
+            Estado
+            <select id="mesa-estado" name="mesa-estado" required>
+              <option value="LIBRE">LIBRE</option>
+              <option value="OCUPADA">OCUPADA</option>
+            </select>
+          </label>
+          <div class="form-actions">
+            <button id="mesa-submit" type="submit">Guardar</button>
+            <button id="mesa-cancel" class="secondary" type="button">Cancelar</button>
+          </div>
+        </form>
+
+        <div id="mesa-errors" class="form-errors" role="alert" aria-live="polite"></div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Numero</th>
+                <th>Capacidad</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="mesa-body"></tbody>
+          </table>
+          <p id="mesa-empty" class="empty-state">Sin mesas registradas.</p>
+        </div>
+
+        <details class="validation-details">
+          <summary>Validaciones aplicadas</summary>
+          <ul>
+            <li>ID obligatorio, unico, con letras, numeros, guion o guion bajo.</li>
+            <li>Numero obligatorio, entero y unico.</li>
+            <li>Capacidad obligatoria, rango 1 a 99.</li>
+            <li>Estado solo LIBRE u OCUPADA.</li>
+            <li>No se permite eliminar mesas con ordenes asociadas.</li>
+            <li>No se permite marcar OCUPADA si ya existe una orden activa.</li>
+          </ul>
+        </details>
+      </section>
+
+      <section class="card" aria-labelledby="meseros-title">
+        <div class="card-header">
+          <h2 id="meseros-title">Meseros</h2>
+          <button id="mesero-reset" class="secondary" type="button">Limpiar datos</button>
+        </div>
+
+        <form id="mesero-form" class="form-grid">
+          <label>
+            Nombre Completo
+            <input id="mesero-nombre" name="mesero-nombre" type="text" autocomplete="off" required />
+          </label>
+          <label>
+            DNI
+            <input id="mesero-dni" name="mesero-dni" type="text" inputmode="numeric" autocomplete="off" required />
+          </label>
+          <label>
+            Telefono
+            <input id="mesero-telefono" name="mesero-telefono" type="text" inputmode="numeric" autocomplete="off" required />
+          </label>
+          <label>
+            Estado
+            <select id="mesero-estado" name="mesero-estado" required>
+              <option value="ACTIVO">ACTIVO</option>
+              <option value="INACTIVO">INACTIVO</option>
+            </select>
+          </label>
+          <div class="form-actions">
+            <button id="mesero-submit" type="submit">Guardar</button>
+            <button id="mesero-cancel" class="secondary" type="button">Cancelar</button>
+          </div>
+        </form>
+
+        <div id="mesero-errors" class="form-errors" role="alert" aria-live="polite"></div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>DNI</th>
+                <th>Telefono</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="mesero-body"></tbody>
+          </table>
+          <p id="mesero-empty" class="empty-state">Sin meseros registrados.</p>
+        </div>
+
+        <details class="validation-details">
+          <summary>Validaciones aplicadas</summary>
+          <ul>
+            <li>ID obligatorio, unico, con letras, numeros, guion o guion bajo.</li>
+            <li>Nombre obligatorio y alfanumerico con espacios.</li>
+            <li>DNI obligatorio, numerico y de 8 digitos.</li>
+            <li>Telefono obligatorio, numerico y de 6 a 15 digitos.</li>
+            <li>Estado solo ACTIVO o INACTIVO.</li>
+            <li>No se permite eliminar meseros con ordenes asociadas.</li>
+          </ul>
+        </details>
+      </section>
+    </main>
+
+    <div id="global-error" class="global-error" role="alert" aria-live="polite"></div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
