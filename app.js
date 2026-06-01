@@ -10,7 +10,7 @@ const ORDER_TYPES = {
   PARA_LLEVAR: "PARA_LLEVAR",
 };
 
-const ORDER_STATES = ["PENDING", "PREPARING", "READY", "CLOSED"];
+const ORDER_STATES = ["PENDIENTE", "EN COCINA", "LISTO", "PAGADO"];
 const PACKAGING_FEE_CENTS = 40;
 
 const state = {
@@ -21,6 +21,7 @@ const state = {
   editingMesaId: null,
   editingMeseroId: null,
   editingProductoId: null,
+  currentOrderIdForItems: null,
   loadError: null,
 };
 
@@ -80,10 +81,17 @@ const ordenIdInput = document.getElementById("orden-id");
 const ordenTipoInput = document.getElementById("orden-tipo");
 const ordenMesaInput = document.getElementById("orden-mesa");
 const ordenMeseroInput = document.getElementById("orden-mesero");
+const ordenEstadoInput = document.getElementById("orden-estado");
 const ordenClienteInput = document.getElementById("orden-cliente");
-const ordenItemOrdenInput = document.getElementById("orden-item-orden");
-const ordenItemProductoInput = document.getElementById("orden-item-producto");
-const ordenItemCantidadInput = document.getElementById("orden-item-cantidad");
+
+const itemsModal = document.getElementById("items-modal");
+const itemsModalTitle = document.getElementById("items-modal-title");
+const itemsModalOrderId = document.getElementById("items-modal-order-id");
+const itemsModalClose = document.getElementById("items-modal-close");
+const itemsModalCancel = document.getElementById("items-modal-cancel");
+
+const ordenItemsContainer = document.getElementById("orden-items-container");
+const addItemRowBtn = document.getElementById("add-item-row-btn");
 const ordenBody = document.getElementById("orden-body");
 const ordenEmpty = document.getElementById("orden-empty");
 const ordenFieldElements = document.querySelectorAll("[data-order-field]");
@@ -128,7 +136,7 @@ function seedMockData() {
       { id: "M1", numero: 1, capacidad: 4, estado: "LIBRE", habilitada: true },
       { id: "M2", numero: 2, capacidad: 2, estado: "LIBRE", habilitada: true },
       { id: "M3", numero: 3, capacidad: 6, estado: "LIBRE", habilitada: true },
-      { id: "M4", numero: 4, capacidad: 4, estado: "LIBRE", habilitada: true },
+      { id: "M4", numero: 4, capacidad: 4, estado: "LIBRE", habilitada: false },
     ];
     saveList(STORAGE_KEYS.mesas, mockMesas);
 
@@ -230,10 +238,10 @@ function seedMockData() {
 
     saveList(STORAGE_KEYS.productos, mockProductos);
     console.log("✅ [SEED] Productos iniciales guardados.");
-
 }
 
 function initState() {
+  console.log("🚀 [SISTEMA] Iniciando ciclo de vida de la aplicación...");
   try {
     // 1. CONTROL DE PERSISTENCIA REAL: Verificar si el almacenamiento no existe o tiene arreglos vacíos
     let isAppEmpty = false;
@@ -245,29 +253,42 @@ function initState() {
       isAppEmpty = true; // Si hay error de formato, tratamos como vacío para regenerar
     }
 
+    if (isAppEmpty) {
+      console.log("ℹ️ [INFO] LocalStorage incompleto o vacío. Cargando Mock Data de fábrica...");
+      seedMockData();
+    } else {
+      console.log("🔄 [INFO] Persistencia detectada. Cargando datos existentes del usuario...");
+    }
 
     // 2. CARGA DINÁMICA CON TRAZABILIDAD
     try {
       state.mesas = loadList(STORAGE_KEYS.mesas).map(ensureMesaDefaults);
+      console.log(`✅ [OK] Mesas cargadas. (Total: ${state.mesas.length})`);
     } catch (e) { console.error("❌ [ERROR] Fallo al cargar Mesas:", e); }
 
     try {
       state.meseros = loadList(STORAGE_KEYS.meseros);
+      console.log(`✅ [OK] Meseros cargados. (Total: ${state.meseros.length})`);
     } catch (e) { console.error("❌ [ERROR] Fallo al cargar Meseros:", e); }
 
     try {
       state.productos = loadList(STORAGE_KEYS.productos);
+      console.log(`✅ [OK] Productos cargados. (Total: ${state.productos.length})`);
     } catch (e) { console.error("❌ [ERROR] Fallo al cargar Productos:", e); }
 
     try {
       state.ordenes = loadList(STORAGE_KEYS.ordenes).map(ensureOrderDefaults);
+      console.log(`✅ [OK] Órdenes cargadas. (Total: ${state.ordenes.length})`);
     } catch (e) { console.error("❌ [ERROR] Fallo al cargar Órdenes:", e); }
 
     // 3. DISPARAR RENDERIZADO INICIAL
+    console.log("🎨 [UI] Ejecutando renderizado inicial de componentes...");
     renderAll();
+    console.log("✨ [SISTEMA] Aplicación lista para el usuario.");
 
   } catch (error) {
     state.loadError = error.message;
+    console.error("❌ [ERROR CRÍTICO] Fallo general en la inicialización:", error);
     if (globalError) {
       globalError.textContent = `Error crítico: ${error.message}. Revisa la consola (F12).`;
     }
@@ -373,17 +394,17 @@ function ensureOrderDefaults(orden) {
   if (![ORDER_TYPES.MESA, ORDER_TYPES.PARA_LLEVAR].includes(normalized.tipo)) {
     normalized.tipo = ORDER_TYPES.MESA;
   }
-  const estadoRaw = String(normalized.estado || "PENDING").trim().toUpperCase();
+  const estadoRaw = String(normalized.estado || "PENDIENTE").trim().toUpperCase();
   const estadoMap = {
-    PENDIENTE: "PENDING",
-    EN_PREPARACION: "PREPARING",
-    LISTA: "READY",
-    CERRADA: "CLOSED",
+    PENDING: "PENDIENTE",
+    PREPARING: "EN COCINA",
+    EN_PREPARACION: "EN COCINA",
+    READY: "LISTO",
+    CLOSED: "PAGADO",
+    CERRADA: "PAGADO"
   };
-  normalized.estado = estadoMap[estadoRaw] || estadoRaw;
-  if (!ORDER_STATES.includes(normalized.estado)) {
-    normalized.estado = "PENDING";
-  }
+  const normalizedEstado = estadoMap[estadoRaw] || estadoRaw;
+  normalized.estado = ORDER_STATES.includes(normalizedEstado) ? normalizedEstado : "PENDIENTE";
   normalized.mesaId = normalized.mesaId
     ? normalizeId(String(normalized.mesaId))
     : null;
@@ -448,7 +469,7 @@ function getActiveOrdersByMesaId(mesaId) {
   return state.ordenes.filter(
     (orden) =>
       orden.mesaId === mesaId &&
-      !["CLOSED", "CERRADA"].includes(String(orden.estado).toUpperCase())
+      orden.estado !== "PAGADO"
   );
 }
 
@@ -458,12 +479,12 @@ function getOrdersByMeseroId(meseroId) {
 
 function getOpenOrders() {
   return state.ordenes.filter((orden) =>
-    ["PENDING", "PREPARING"].includes(String(orden.estado).toUpperCase())
+    ["PENDIENTE", "EN COCINA"].includes(String(orden.estado).toUpperCase())
   );
 }
 
 function canModifyOrderItems(orden) {
-  return ["PENDING", "PREPARING"].includes(String(orden.estado).toUpperCase());
+  return ["PENDIENTE", "EN COCINA"].includes(String(orden.estado).toUpperCase());
 }
 
 function getNextOrderState(currentState) {
@@ -873,18 +894,6 @@ function readOrdenForm() {
   };
 }
 
-function readOrdenItemForm() {
-  return {
-    ordenId: ordenItemOrdenInput.value
-      ? normalizeId(ordenItemOrdenInput.value)
-      : "",
-    productoId: ordenItemProductoInput.value
-      ? normalizeId(ordenItemProductoInput.value)
-      : "",
-    cantidad: Number(ordenItemCantidadInput.value),
-  };
-}
-
 function resetMesaForm() {
   mesaForm.reset();
   state.editingMesaId = null;
@@ -919,6 +928,63 @@ function resetOrdenForm() {
 function resetOrdenItemForm() {
   ordenItemForm.reset();
   ordenItemErrors.innerHTML = "";
+  ordenItemsContainer.innerHTML = "";
+}
+
+/**
+ * Crea una nueva fila de producto. Permite precargar datos para edición.
+ */
+function createItemRow(prefillProductId = "", prefillQty = 1) {
+  const row = document.createElement("div");
+  row.className = "grid grid-cols-12 gap-xs items-center item-row bg-surface-container-low p-xs rounded-lg border border-outline-variant";
+  
+  row.innerHTML = `
+    <div class="col-span-7">
+      <select class="product-select w-full rounded-lg border border-outline-variant bg-surface px-sm py-xs text-body-md" required>
+        <option value="">Seleccione producto</option>
+        ${state.productos.filter(p => p.estado && p.disponibilidad).map(p => `<option value="${p.id}">${p.nombre} (S/ ${p.precio})</option>`).join('')}
+      </select>
+    </div>
+    <div class="col-span-3">
+      <input type="number" class="qty-input w-full rounded-lg border border-outline-variant bg-surface px-sm py-xs text-center text-body-md" value="${prefillQty}" min="1" max="99" ${prefillProductId ? '' : 'disabled'} />
+    </div>
+    <div class="col-span-2 flex justify-end">
+      <button type="button" class="remove-row-btn text-error hover:bg-error-container p-xs rounded-full transition-colors">
+        <span class="material-symbols-outlined text-[20px]">delete</span>
+      </button>
+    </div>
+  `;
+
+  const select = row.querySelector(".product-select");
+  const qtyInput = row.querySelector(".qty-input");
+  const removeBtn = row.querySelector(".remove-row-btn");
+
+  if (prefillProductId) {
+    select.value = prefillProductId;
+    qtyInput.disabled = false;
+  }
+
+  select.addEventListener("change", () => {
+    qtyInput.disabled = !select.value;
+  });
+
+  removeBtn.addEventListener("click", () => {
+    if (ordenItemsContainer.querySelectorAll(".item-row").length > 1) {
+      row.remove();
+    } else {
+      select.value = "";
+      qtyInput.value = "1";
+      qtyInput.disabled = true;
+    }
+  });
+
+  ordenItemsContainer.appendChild(row);
+}
+
+function fillEstadoSelect() {
+  if (ordenEstadoInput) {
+    ordenEstadoInput.innerHTML = ORDER_STATES.map(s => `<option value="${s}">${s}</option>`).join("");
+  }
 }
 
 function mesaSubmitText(text) {
@@ -1053,8 +1119,7 @@ function renderProductos() {
 function renderOrdenSelects() {
   const mesaSelection = ordenMesaInput.value;
   const meseroSelection = ordenMeseroInput.value;
-  const ordenSelection = ordenItemOrdenInput.value;
-  const productoSelection = ordenItemProductoInput.value;
+  
 
   ordenMesaInput.innerHTML = '<option value="">Seleccione</option>';
   state.mesas
@@ -1084,38 +1149,6 @@ function renderOrdenSelects() {
       ordenMeseroInput.appendChild(option);
     });
 
-  const openOrders = getOpenOrders();
-  ordenItemOrdenInput.innerHTML = '<option value="">Seleccione</option>';
-  openOrders.forEach((orden) => {
-    const option = document.createElement("option");
-    option.value = orden.id;
-    option.textContent = `${orden.id} - ${formatOrderType(orden.tipo)} (${orden.estado})`;
-    if (orden.id === ordenSelection) {
-      option.selected = true;
-    }
-    ordenItemOrdenInput.appendChild(option);
-  });
-
-  const availableProducts = state.productos.filter(
-    (producto) => producto.estado && producto.disponibilidad
-  );
-  ordenItemProductoInput.innerHTML = '<option value="">Seleccione</option>';
-  availableProducts
-    .sort((a, b) => a.nombre.localeCompare(b.nombre))
-    .forEach((producto) => {
-      const option = document.createElement("option");
-      option.value = producto.id;
-      option.textContent = `${producto.id} - ${producto.nombre}`;
-      if (producto.id === productoSelection) {
-        option.selected = true;
-      }
-      ordenItemProductoInput.appendChild(option);
-    });
-
-  const shouldDisableItems = openOrders.length === 0 || availableProducts.length === 0;
-  ordenItemOrdenInput.disabled = openOrders.length === 0;
-  ordenItemProductoInput.disabled = availableProducts.length === 0;
-  ordenItemCantidadInput.disabled = shouldDisableItems;
 }
 
 function renderOrdenes() {
@@ -1131,10 +1164,10 @@ function renderOrdenes() {
     row.appendChild(createCell(orden.cliente || "-"));
     row.appendChild(createCell(orden.estado));
 
-    const itemsCell = document.createElement("td");
+        const itemsCell = document.createElement("td");
     itemsCell.className = "p-md text-body-md text-on-surface";
     if (orden.items.length === 0) {
-      itemsCell.textContent = "Sin items";
+      itemsCell.innerHTML = '<span class="italic text-on-surface-variant opacity-60">Sin ítems</span>';
     } else {
       const list = document.createElement("ul");
       list.className = "list-disc list-inside space-y-base";
@@ -1144,17 +1177,6 @@ function renderOrdenes() {
         listItem.textContent = `${item.nombre} x${item.cantidad} (S/ ${formatCents(
           subtotal
         )})`;
-        if (canModifyOrderItems(orden)) {
-          const removeButton = createActionButton(
-            "Quitar",
-            "remove-order-item",
-            orden.id
-          );
-          removeButton.dataset.productId = item.productId;
-          removeButton.classList.add("ml-xs");
-          listItem.appendChild(document.createTextNode(" "));
-          listItem.appendChild(removeButton);
-        }
         list.appendChild(listItem);
       });
       itemsCell.appendChild(list);
@@ -1162,26 +1184,35 @@ function renderOrdenes() {
     row.appendChild(itemsCell);
 
     const totals = calculateOrderTotals(orden);
-    const totalLabel =
+    let totalLabel =
       orden.tipo === ORDER_TYPES.PARA_LLEVAR
         ? `S/ ${formatCents(totals.totalCents)} (incluye S/ ${formatCents(
             totals.packagingFeeCents
           )} packaging)`
         : `S/ ${formatCents(totals.totalCents)}`;
+
+    if (orden.items.length === 0) totalLabel = "S/ 0.00";
     row.appendChild(createCell(totalLabel));
 
     const actions = document.createElement("td");
-    actions.className = "p-md";
-    if (orden.estado !== "CLOSED") {
+    
+    // RENDERIZADO CONDICIONAL DE BOTONES
+    if (orden.items.length === 0) {
+      // ESTADO A: Recién creada / Sin productos
+      actions.appendChild(createActionButton("➕ Agregar Platos", "open-items-modal", orden.id, "bg-secondary-container text-on-secondary-container border-none"));
+    } else if (orden.estado !== "PAGADO") {
+      // ESTADO B: Con productos asignados
       const nextState = getNextOrderState(orden.estado);
-      const label = nextState === "CLOSED" ? "Cerrar" : `A ${nextState}`;
-      actions.appendChild(
-        createActionButton(label, "advance-order", orden.id)
-      );
+      const label = nextState === "PAGADO" ? "💳 Cobrar" : `🍳 A Cocina`;
+      
+      actions.appendChild(createActionButton(label, "advance-order", orden.id, "bg-primary text-on-primary border-none"));
+      actions.appendChild(createActionButton("✏️ Modificar", "open-items-modal", orden.id, "ml-xs"));
     }
+
     row.appendChild(actions);
     ordenBody.appendChild(row);
   });
+
 
   renderOrdenSelects();
   renderDashboardTables();
@@ -1227,7 +1258,7 @@ function renderDashboardMeseros() {
     row.appendChild(createCell(mesero.nombre));
     row.appendChild(createCell(mesero.estado));
     const ordenesActivas = getOrdersByMeseroId(mesero.id).filter(
-      (orden) => orden.estado !== "CLOSED"
+      (orden) => orden.estado !== "PAGADO"
     ).length;
     row.appendChild(createCell(String(ordenesActivas)));
     dashboardMeseroBody.appendChild(row);
@@ -1457,7 +1488,7 @@ function handleOrdenSubmit(event) {
       mesaId: input.mesaId,
       meseroId: input.meseroId,
       cliente: input.cliente || "",
-      estado: "PENDING",
+      estado: "PENDIENTE",
       items: [],
       packagingFeeCents:
         input.tipo === ORDER_TYPES.PARA_LLEVAR ? PACKAGING_FEE_CENTS : 0,
@@ -1500,50 +1531,74 @@ function handleOrdenSubmit(event) {
   }
 }
 
+/**
+ * Abre el modal dinámico de gestión de platillos
+ */
+function openItemsModal(ordenId) {
+  state.currentOrderIdForItems = ordenId;
+  const orden = state.ordenes.find(o => o.id === ordenId);
+  if (!orden) return;
+
+  resetOrdenItemForm();
+  itemsModalOrderId.textContent = ordenId;
+  
+  if (orden.items.length === 0) {
+    itemsModalTitle.textContent = "Añadir Platos";
+    createItemRow(); // Iniciar con una fila limpia
+  } else {
+    itemsModalTitle.textContent = "Modificar Pedido";
+    orden.items.forEach(item => {
+      createItemRow(item.productId, item.cantidad);
+    });
+  }
+
+  itemsModal.classList.remove("hidden");
+}
+
+function closeItemsModal() {
+  itemsModal.classList.add("hidden");
+  state.currentOrderIdForItems = null;
+  resetOrdenItemForm();
+}
+
 function handleOrdenItemSubmit(event) {
   event.preventDefault();
   clearErrors();
   try {
-    const input = readOrdenItemForm();
-    validateOrdenItem(input);
+    const ordenId = state.currentOrderIdForItems;
+    if (!ordenId) throw new Error("Referencia de orden perdida.");
 
-    const orden = state.ordenes.find((item) => item.id === input.ordenId);
-    const producto = state.productos.find((item) => item.id === input.productoId);
-    if (!orden || !producto) {
-      throw new ValidationError(["La orden o el producto no existen."]);
-    }
+    const orden = state.ordenes.find(o => o.id === ordenId);
+    if (!canModifyOrderItems(orden)) throw new ValidationError(["Esta orden no permite cambios en este estado."]);
 
-    const precioCents = parsePriceToCents(producto.precio);
-    const existingItem = orden.items.find(
-      (item) => item.productId === producto.id
-    );
-    let itemsActualizados;
-    if (existingItem) {
-      itemsActualizados = orden.items.map((item) =>
-        item.productId === producto.id
-          ? {
-              ...item,
-              cantidad: item.cantidad + input.cantidad,
-            }
-          : item
-      );
-    } else {
-      itemsActualizados = [
-        ...orden.items,
-        {
+    const rows = ordenItemsContainer.querySelectorAll(".item-row");
+    const itemsToAdd = [];
+
+    rows.forEach((row, index) => {
+      const productId = row.querySelector(".product-select").value;
+      const cantidad = parseInt(row.querySelector(".qty-input").value);
+
+      if (productId) {
+        if (isNaN(cantidad) || cantidad < 1) {
+          throw new ValidationError([`Fila ${index + 1}: La cantidad debe ser al menos 1.`]);
+        }
+        const producto = state.productos.find(p => p.id === productId);
+        itemsToAdd.push({
           productId: producto.id,
           nombre: producto.nombre,
-          precioCents,
-          cantidad: input.cantidad,
-        },
-      ];
-    }
+          precioCents: parsePriceToCents(producto.precio),
+          cantidad: cantidad
+        });
+      }
+    });
 
-    state.ordenes = state.ordenes.map((item) =>
-      item.id === orden.id ? { ...orden, items: itemsActualizados } : item
-    );
+    if (itemsToAdd.length === 0) throw new ValidationError(["Debe seleccionar al menos un producto."]);
+
+    // Sobrescribir items (Permite añadir y quitar en edición)
+    orden.items = itemsToAdd;
+
     saveList(STORAGE_KEYS.ordenes, state.ordenes);
-    resetOrdenItemForm();
+    closeItemsModal();
     renderOrdenes();
   } catch (error) {
     if (error instanceof ValidationError) {
@@ -1561,6 +1616,11 @@ function handleOrdenActions(event) {
     return;
   }
 
+  if (action === "open-items-modal") {
+    openItemsModal(id);
+    return;
+  }
+
   if (action === "advance-order") {
     clearErrors();
     try {
@@ -1568,13 +1628,13 @@ function handleOrdenActions(event) {
       if (!orden) {
         throw new ValidationError(["La orden seleccionada no existe."]);
       }
-      if (orden.estado === "CLOSED") {
+      if (orden.estado === "PAGADO") {
         throw new ValidationError(["La orden ya esta cerrada."]);
       }
 
       const nextState = getNextOrderState(orden.estado);
       let mesasActualizadas = state.mesas;
-      if (nextState === "CLOSED" && orden.mesaId) {
+      if (nextState === "PAGADO" && orden.mesaId) {
         const mesa = state.mesas.find((item) => item.id === orden.mesaId);
         if (!mesa) {
           throw new ValidationError(["La mesa asociada ya no existe."]);
@@ -1590,7 +1650,7 @@ function handleOrdenActions(event) {
       );
       state.mesas = mesasActualizadas;
       saveList(STORAGE_KEYS.ordenes, state.ordenes);
-      if (nextState === "CLOSED" && orden.mesaId) {
+      if (nextState === "PAGADO" && orden.mesaId) {
         saveList(STORAGE_KEYS.mesas, state.mesas);
       }
       renderOrdenes();
@@ -1860,9 +1920,15 @@ function bindEvents() {
   ordenBody.addEventListener("click", handleOrdenActions);
   ordenResetButton.addEventListener("click", handleOrdenReset);
   ordenCancelButton.addEventListener("click", resetOrdenForm);
+  addItemRowBtn.addEventListener("click", createItemRow);
+  itemsModalClose.addEventListener("click", closeItemsModal);
+  itemsModalCancel.addEventListener("click", closeItemsModal);
+  
   ordenTipoInput.addEventListener("change", (event) => {
     updateOrderTypeFields(event.target.value);
   });
+
+  fillEstadoSelect();
 
   initTabs();
 }
@@ -1870,23 +1936,28 @@ function bindEvents() {
 function renderAll() {
   try {
     renderMesas();
+    console.log("📊 [RENDER] Grid de mesas actualizado.");
   } catch (e) { console.error("❌ [ERROR] Fallo en renderMesas:", e); }
 
   try {
     renderMeseros();
+    console.log("📊 [RENDER] Lista de meseros actualizada.");
   } catch (e) { console.error("❌ [ERROR] Fallo en renderMeseros:", e); }
 
   try {
     renderProductos();
+    console.log("📊 [RENDER] Catálogo de productos actualizado.");
   } catch (e) { console.error("❌ [ERROR] Fallo en renderProductos:", e); }
 
   try {
     renderOrdenes();
+    console.log("📊 [RENDER] Tabla de órdenes actualizada.");
   } catch (e) { console.error("❌ [ERROR] Fallo en renderOrdenes:", e); }
 
   try {
     resetOrdenForm();
     resetOrdenItemForm();
+    console.log("🧹 [UI] Formularios de órdenes reseteados.");
   } catch (e) { console.error("❌ [ERROR] Fallo al resetear formularios:", e); }
 }
 

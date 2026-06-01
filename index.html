@@ -27,6 +27,14 @@
         background: #d0e1fb;
         color: #54647a;
       }
+      /* Estilos para el Modal de Items */
+      .modal-overlay {
+        background-color: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(4px);
+      }
+      .modal-content {
+        max-height: 90vh;
+      }
     </style>
     <script id="tailwind-config">
       tailwind.config = {
@@ -159,8 +167,8 @@
           type="button"
           data-tab="catalogo"
         >
-          <span class="material-symbols-outlined">menu_book</span>
-          Catalogo
+          <span class="material-symbols-outlined">restaurant_menu</span>
+          Catálogo
         </button>
         <button
           class="tab-button flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-xl font-label-md transition-all"
@@ -198,7 +206,7 @@
             <p class="font-label-md text-label-md text-on-surface-variant mb-base">
               DASHBOARD
             </p>
-            <h2 class="font-display text-display text-on-surface">Floor View</h2>
+            <h2 class="font-display text-display text-on-surface">Vista de Planta</h2>
           </div>
           <div class="flex gap-sm">
             <div
@@ -242,7 +250,7 @@
             >
               <div class="flex items-center justify-between mb-md">
                 <h3 class="font-headline-sm text-headline-sm">
-                  Gestion de Ordenes
+                  Gestión de Órdenes
                 </h3>
                 <button
                   id="orden-reset"
@@ -303,6 +311,19 @@
                   </select>
                 </label>
                 <label
+                  data-order-field="estado"
+                  class="flex flex-col gap-xs text-label-md text-on-surface-variant"
+                >
+                  Estado
+                  <select
+                    id="orden-estado"
+                    name="orden-estado"
+                    class="rounded-lg border border-outline-variant bg-surface px-sm py-xs"
+                  >
+                    <!-- Se llena dinámicamente -->
+                  </select>
+                </label>
+                <label
                   data-order-field="cliente"
                   class="flex flex-col gap-xs text-label-md text-on-surface-variant"
                 >
@@ -323,7 +344,7 @@
                     class="flex-1 py-sm bg-primary text-on-primary rounded-lg font-label-md"
                     type="submit"
                   >
-                    Crear orden
+                    Guardar Orden
                   </button>
                   <button
                     id="orden-cancel"
@@ -343,64 +364,6 @@
               ></div>
             </div>
 
-            <div
-              class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg"
-            >
-              <h3 class="font-headline-sm text-headline-sm mb-md">
-                Items de Orden
-              </h3>
-              <form id="orden-item-form" class="grid gap-md">
-                <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
-                  Orden
-                  <select
-                    id="orden-item-orden"
-                    name="orden-item-orden"
-                    required
-                    class="rounded-lg border border-outline-variant bg-surface px-sm py-xs"
-                  >
-                    <option value="">Seleccione</option>
-                  </select>
-                </label>
-                <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
-                  Producto
-                  <select
-                    id="orden-item-producto"
-                    name="orden-item-producto"
-                    required
-                    class="rounded-lg border border-outline-variant bg-surface px-sm py-xs"
-                  >
-                    <option value="">Seleccione</option>
-                  </select>
-                </label>
-                <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
-                  Cantidad
-                  <input
-                    id="orden-item-cantidad"
-                    name="orden-item-cantidad"
-                    type="number"
-                    min="1"
-                    max="99"
-                    step="1"
-                    required
-                    class="rounded-lg border border-outline-variant bg-surface px-sm py-xs"
-                  />
-                </label>
-                <button
-                  id="orden-item-submit"
-                  class="py-sm bg-primary text-on-primary rounded-lg font-label-md"
-                  type="submit"
-                >
-                  Agregar item
-                </button>
-              </form>
-
-              <div
-                id="orden-item-errors"
-                class="text-error text-body-md min-h-[20px] mt-sm"
-                role="alert"
-                aria-live="polite"
-              ></div>
-            </div>
           </div>
 
           <div class="col-span-12 lg:col-span-7">
@@ -409,7 +372,7 @@
             >
               <div class="p-md border-b border-outline-variant">
                 <h3 class="font-headline-sm text-headline-sm">
-                  Ordenes activas e historicas
+                  Órdenes Activas e Históricas
                 </h3>
               </div>
               <div class="overflow-x-auto">
@@ -452,7 +415,7 @@
                 id="orden-empty"
                 class="text-on-surface-variant text-body-md px-md py-sm"
               >
-                Sin ordenes registradas.
+                Sin órdenes registradas.
               </p>
             </div>
           </div>
@@ -940,6 +903,62 @@
       role="alert"
       aria-live="polite"
     ></div>
+
+    <!-- MODAL ÚNICO PARA GESTIÓN DE ITEMS -->
+    <div id="items-modal" class="fixed inset-0 z-[60] flex items-center justify-center hidden">
+      <div class="absolute inset-0 modal-overlay" id="items-modal-overlay"></div>
+      <div class="relative bg-surface p-xl rounded-xl border border-outline-variant shadow-xl w-full max-w-2xl modal-content flex flex-col">
+        <div class="flex justify-between items-center mb-md">
+          <h3 class="font-headline-md text-headline-md" id="items-modal-title">Gestión de Platillos</h3>
+          <button type="button" class="material-symbols-outlined hover:bg-surface-container-high p-xs rounded-full" id="items-modal-close">close</button>
+        </div>
+        
+        <div class="bg-surface-container-low p-md rounded-lg mb-md flex justify-between items-center border border-outline-variant">
+          <span class="font-label-md text-on-surface-variant">ORDEN SELECCIONADA:</span>
+          <span id="items-modal-order-id" class="font-data-mono font-bold text-primary"></span>
+        </div>
+
+        <form id="orden-item-form" class="flex flex-col gap-md overflow-hidden">
+          <div class="flex-1 overflow-y-auto pr-base space-y-md">
+            <div class="grid grid-cols-12 gap-xs px-base text-label-md text-on-surface-variant font-bold">
+              <div class="col-span-7">Producto</div>
+              <div class="col-span-3 text-center">Cantidad</div>
+              <div class="col-span-2"></div>
+            </div>
+            
+            <div id="orden-items-container" class="space-y-sm min-h-[100px]">
+              <!-- Filas dinámicas inyectadas por JS -->
+            </div>
+            
+            <button type="button" id="add-item-row-btn" class="mt-xs text-primary font-label-md flex items-center gap-base hover:bg-secondary-container px-md py-sm rounded-lg transition-all border border-primary/20">
+              <span class="material-symbols-outlined">add_circle</span>
+              Agregar otro producto
+            </button>
+          </div>
+
+          <div class="pt-md border-t border-outline-variant flex flex-col gap-sm">
+            <div id="orden-item-errors" class="text-error text-body-md min-h-[20px]" role="alert"></div>
+            <div class="flex gap-sm">
+              <button
+                id="items-modal-save"
+                class="flex-1 py-md bg-primary text-on-primary rounded-lg font-bold flex items-center justify-center gap-sm active:scale-[0.98] transition-all"
+                type="submit"
+              >
+                <span class="material-symbols-outlined">save</span>
+                Confirmar Pedido
+              </button>
+              <button
+                type="button"
+                id="items-modal-cancel"
+                class="px-lg py-md border border-outline-variant rounded-lg text-on-surface-variant hover:bg-surface-container-low font-bold"
+              >
+                Descartar
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
 
     <script src="app.js" defer></script>
   </body>
