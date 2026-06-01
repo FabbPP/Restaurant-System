@@ -333,8 +333,9 @@
                     name="orden-cliente"
                     type="text"
                     autocomplete="off"
-                    maxlength="60"
-                    pattern="[A-Za-z0-9 _-]+"
+                    minlength="2"
+                    maxlength="50"
+                    pattern="[A-Za-zÁéíóúÁÉÍÓÚñÑ ]+"
                     class="rounded-lg border border-outline-variant bg-surface px-sm py-xs"
                   />
                 </label>
@@ -511,7 +512,10 @@
                 id="producto-nombre"
                 name="producto-nombre"
                 type="text"
+                minlength="2"
+                maxlength="50"
                 autocomplete="off"
+                pattern="[A-Za-zÁéíóúÁÉÍÓÚñÑ ]+"
                 required
                 class="rounded-lg border border-outline-variant bg-surface px-sm py-xs"
               />
@@ -523,6 +527,7 @@
                 name="producto-precio"
                 type="number"
                 min="0.01"
+                max="999999"
                 step="0.01"
                 required
                 class="rounded-lg border border-outline-variant bg-surface px-sm py-xs"
@@ -683,7 +688,7 @@
                 name="mesa-capacidad"
                 type="number"
                 min="1"
-                step="1"
+                max="16"
                 required
                 class="rounded-lg border border-outline-variant bg-surface px-sm py-xs"
               />
@@ -803,7 +808,10 @@
                 id="mesero-nombre"
                 name="mesero-nombre"
                 type="text"
+                minlength="2"
+                maxlength="50"
                 autocomplete="off"
+                pattern="[A-Za-zÁéíóúÁÉÍÓÚñÑ ]+"
                 required
                 class="rounded-lg border border-outline-variant bg-surface px-sm py-xs"
               />
@@ -814,6 +822,9 @@
                 id="mesero-dni"
                 name="mesero-dni"
                 type="text"
+                minlength="8"
+                maxlength="8"
+                pattern="\d{8}"
                 inputmode="numeric"
                 autocomplete="off"
                 required
@@ -821,11 +832,14 @@
               />
             </label>
             <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
-              Telefono
+              Número de Celular
               <input
-                id="mesero-telefono"
-                name="mesero-telefono"
+                id="mesero-celular"
+                name="mesero-celular"
                 type="text"
+                minlength="9"
+                maxlength="9"
+                pattern="\d{9}"
                 inputmode="numeric"
                 autocomplete="off"
                 required
@@ -1010,7 +1024,11 @@
               </label>
               <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
                 Nombre del Cliente
-                <input id="billing-customer-name" type="text" class="rounded-lg border border-outline-variant bg-surface px-sm py-xs" placeholder="Nombre completo">
+                <input id="billing-customer-name" type="text" class="rounded-lg border border-outline-variant bg-surface px-sm py-xs" placeholder="Nombre completo"
+                  minlength="2"
+                  maxlength="50"
+                  pattern="[A-Za-zÁéíóúÁÉÍÓÚñÑ ]+"
+                >
               </label>
             </div>
 

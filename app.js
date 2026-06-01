@@ -53,7 +53,7 @@ const meseroEmpty = document.getElementById("mesero-empty");
 const meseroIdInput = document.getElementById("mesero-id");
 const meseroNombreInput = document.getElementById("mesero-nombre");
 const meseroDniInput = document.getElementById("mesero-dni");
-const meseroTelefonoInput = document.getElementById("mesero-telefono");
+const meseroCelularInput = document.getElementById("mesero-celular");
 const meseroEstadoInput = document.getElementById("mesero-estado");
 const meseroCancelButton = document.getElementById("mesero-cancel");
 const meseroResetButton = document.getElementById("mesero-reset");
@@ -154,17 +154,17 @@ function saveList(key, value) {
 function seedMockData() {
     
     const mockMesas = [
-      { id: "M1", numero: 1, capacidad: 4, estado: "LIBRE", habilitada: true },
-      { id: "M2", numero: 2, capacidad: 2, estado: "LIBRE", habilitada: true },
-      { id: "M3", numero: 3, capacidad: 6, estado: "LIBRE", habilitada: true },
-      { id: "M4", numero: 4, capacidad: 4, estado: "LIBRE", habilitada: true },
+      { id: "M01", numero: 1, capacidad: 4, estado: "LIBRE", habilitada: true, activo: true },
+      { id: "M02", numero: 2, capacidad: 2, estado: "LIBRE", habilitada: true, activo: true },
+      { id: "M03", numero: 3, capacidad: 6, estado: "LIBRE", habilitada: true, activo: true },
+      { id: "M04", numero: 4, capacidad: 4, estado: "LIBRE", habilitada: true, activo: true },
     ];
     saveList(STORAGE_KEYS.mesas, mockMesas);
 
     const mockMeseros = [
-      { id: "W1", nombre: "Juan Perez", dni: "12345678", telefono: "987654321", estado: "ACTIVO" },
-      { id: "W2", nombre: "Maria Garcia", dni: "87654321", telefono: "912345678", estado: "ACTIVO" },
-      { id: "W3", nombre: "Pedro Rodriguez", dni: "45678912", telefono: "945612378", estado: "ACTIVO" },
+      { id: "W01", nombre: "Juan Perez", dni: "12345678", celular: "987654321", estado: "ACTIVO", activo: true },
+      { id: "W02", nombre: "Maria Garcia", dni: "87654321", celular: "912345678", estado: "ACTIVO", activo: true },
+      { id: "W03", nombre: "Pedro Rodriguez", dni: "45678912", celular: "945612378", estado: "ACTIVO", activo: true },
     ];
     saveList(STORAGE_KEYS.meseros, mockMeseros);
 
@@ -172,79 +172,88 @@ function seedMockData() {
     const mockProductos = [
       // --- ENTRADAS Y ENTRANTES ---
       { 
-        id: "P1", 
+        id: "P01", 
         nombre: "Rocoto Relleno con Pastel de Papa", 
         precio: "28.00", 
         disponibilidad: true, 
-        estado: true, 
+        estado: true,
+        activo: true, 
         descripcion: "Rocoto desvenado relleno de carne picada a cuchillo, pasas y aceituna, cubierto de queso derretido y acompañado de su clásico pastel de papa horneado." 
       },
       { 
-        id: "P2", 
+        id: "P02", 
         nombre: "Solterito de Queso", 
         precio: "18.00", 
         disponibilidad: true, 
-        estado: true, 
+        estado: true,
+        activo: true, 
         descripcion: "Ensalada fresca y colorida de habas tiernas, choclo desgranado, queso fresco en cubos, aceitunas negras, tomate y cebolla, aliñada con aceite y vinagre." 
       },
       { 
-        id: "P3", 
+        id: "P03", 
         nombre: "Ocopa Tradicional", 
         precio: "16.00", 
         disponibilidad: true, 
-        estado: true, 
+        estado: true,
+        activo: true, 
         descripcion: "Rodajas de papas sancochadas bañadas en una cremosa salsa de huacatay, maní y queso, hecha en batán. Acompañada de huevo duro y aceituna." 
       },
       { 
-        id: "P4", 
+        id: "P04", 
         nombre: "Escribano", 
         precio: "14.00", 
         disponibilidad: true, 
-        estado: true, 
+        estado: true,
+        activo: true, 
         descripcion: "Papas machacadas con tomate, rocoto picadito, vinagre y un chorro de aceite." 
       },
 
       // --- LOS SEGUNDOS Y PICANTES ---
       { 
-        id: "P5", 
+        id: "P05", 
         nombre: "Cuy Chactado", 
         precio: "55.00", 
         disponibilidad: true, 
-        estado: true, 
+        estado: true,
+        activo: true, 
         descripcion: "Cuy entero tierno, aderezado y frito bajo el peso de una piedra de batán hasta quedar perfectamente crocante. Servido con papas doradas y ensalada." 
       },
       { 
-        id: "P6", 
+        id: "P06", 
         nombre: "Costillar Dorado", 
         precio: "42.00", 
         disponibilidad: true, 
-        estado: true, 
+        estado: true,
+        activo: true, 
         descripcion: "Costilla de cordero de leche, sazonada con ají y ajo, frita hasta quedar doradita por fuera y jugosa por dentro. Viene con papas fritas y ensalada criolla." 
       },
       { 
-        id: "P7", 
+        id: "P07", 
         nombre: "Malaya Frita", 
         precio: "38.00", 
         disponibilidad: true, 
-        estado: true, 
+        estado: true,
+        activo: true, 
         descripcion: "Falda de res sancochada con especias y luego dorada a la sartén. Se sirve con papas doradas y una buena porción de sarza de cebolla." 
       },
       { 
-        id: "P8", 
+        id: "P08", 
         nombre: "El Triple Picantero", 
         precio: "45.00", 
         disponibilidad: true, 
-        estado: true, 
+        estado: true,
+        activo: true, 
         descripcion: "Combinado de tres clásicos en un solo plato: Rocoto relleno, Pastel de papa y un picante del día (Matasquita o Ají de calabaza)." 
       },
 
       // --- BEBIDAS ---
       { 
-        id: "P9", 
+        id: "P09", 
         nombre: "Chicha de Jora (Caporal)", 
         precio: "8.00", 
         disponibilidad: true, 
-        estado: true, 
+        estado: true,
+        activo: true, 
         descripcion: "Néctar de maíz fermentado artesanalmente. El maridaje obligatorio de toda picantería." 
       },
       { 
@@ -252,7 +261,8 @@ function seedMockData() {
         nombre: "Chicha Morada Helada (Jarra)", 
         precio: "15.00", 
         disponibilidad: true, 
-        estado: true, 
+        estado: true,
+        activo: true, 
         descripcion: "Preparada en casa con maíz morado, piña, membrillo, manzana y un toque de limón." 
       }
     ];
@@ -356,8 +366,12 @@ function isId(value) {
   return /^[A-Za-z0-9_-]+$/.test(value);
 }
 
-function isAlphanumericText(value) {
-  return /^[A-Za-z0-9 _-]+$/.test(value);
+/**
+ * Hacker-Proof: Solo permite letras (incluyendo tildes y ñ) y espacios.
+ * Bloquea números y caracteres especiales en campos de texto descriptivos.
+ */
+function isStrictAlphaText(value) {
+  return /^[A-Za-zÁéíóúÁÉÍÓÚñÑ ]+$/.test(value);
 }
 
 function isDigits(value) {
@@ -370,6 +384,13 @@ function isValidPrice(value) {
 
 function formatPrice(value) {
   return Number(value).toFixed(2);
+}
+
+/**
+ * Validador genérico para nombres (2 a 50 caracteres)
+ */
+function isValidNameLength(value) {
+  return value.length >= 2 && value.length <= 50;
 }
 
 function formatCents(cents) {
@@ -666,8 +687,8 @@ function validateMesa(input) {
     errors.push("La capacidad es obligatoria.");
   } else if (!Number.isInteger(input.capacidad)) {
     errors.push("La capacidad debe ser un numero entero.");
-  } else if (input.capacidad < 1 || input.capacidad > 99) {
-    errors.push("La capacidad debe estar entre 1 y 99.");
+  } else if (input.capacidad < 1 || input.capacidad > 16) {
+    errors.push("La capacidad debe estar entre 1 y 16.");
   }
 
   if (!["LIBRE", "OCUPADA", "DESHABILITADA"].includes(input.estado)) {
@@ -713,16 +734,16 @@ function validateMesero(input) {
 
   if (!input.nombre) {
     errors.push("El nombre es obligatorio.");
-  } else if (!isAlphanumericText(input.nombre)) {
-    errors.push("El nombre solo permite caracteres alfanumericos y espacios.");
-  } else if (input.nombre.length > 60) {
-    errors.push("El nombre no puede exceder 60 caracteres.");
+  } else if (!isValidNameLength(input.nombre)) {
+    errors.push("El campo de texto debe contener entre 2 y 50 caracteres.");
+  } else if (!isStrictAlphaText(input.nombre)) {
+    errors.push("Error de Seguridad: El nombre del mesero NO puede contener números ni símbolos.");
   }
 
   if (!input.dni) {
     errors.push("El DNI es obligatorio.");
   } else if (!isDigits(input.dni) || input.dni.length !== 8) {
-    errors.push("El DNI debe tener 8 digitos numericos.");
+    errors.push("El DNI debe tener exactamente 8 dígitos numéricos.");
   } else if (
     state.meseros.some(
       (mesero) =>
@@ -732,12 +753,10 @@ function validateMesero(input) {
     errors.push("El DNI ya esta registrado.");
   }
 
-  if (!input.telefono) {
-    errors.push("El telefono es obligatorio.");
-  } else if (!isDigits(input.telefono)) {
-    errors.push("El telefono solo permite numeros.");
-  } else if (input.telefono.length < 6 || input.telefono.length > 15) {
-    errors.push("El telefono debe tener entre 6 y 15 digitos.");
+  if (!input.celular) {
+    errors.push("El numero de celular es obligatorio.");
+  } else if (!isDigits(input.celular) || input.celular.length !== 9) {
+    errors.push("El número de celular debe tener exactamente 9 dígitos numéricos.");
   }
 
   if (!["ACTIVO", "INACTIVO"].includes(input.estado)) {
@@ -766,20 +785,24 @@ function validateProducto(input) {
 
   if (!input.nombre) {
     errors.push("El nombre es obligatorio.");
-  } else if (!isAlphanumericText(input.nombre)) {
-    errors.push("El nombre solo permite caracteres alfanumericos y espacios.");
+  } else if (!isValidNameLength(input.nombre)) {
+    errors.push("El campo de texto debe contener entre 2 y 50 caracteres.");
+  } else if (!isStrictAlphaText(input.nombre)) {
+    errors.push("Error de Seguridad: El nombre del producto NO puede contener números ni símbolos.");
   }
 
   if (!input.precio) {
     errors.push("El precio es obligatorio.");
   } else if (!isValidPrice(input.precio)) {
     errors.push("El precio debe tener hasta 2 decimales.");
-  } else if (Number(input.precio) <= 0) {
-    errors.push("El precio debe ser mayor a 0.");
+  } else if (Number(input.precio) <= 0 || Number(input.precio) > 999999) {
+    errors.push("El precio debe ser mayor a 0 y menor que 999999.");
   }
 
   if (!input.descripcion) {
     errors.push("La descripcion es obligatoria.");
+  } else if (!isStrictAlphaText(input.descripcion)) {
+    errors.push("Error de Seguridad: La descripción NO permite números ni símbolos para evitar inyecciones.");
   }
 
   if (typeof input.disponibilidad !== "boolean") {
@@ -842,12 +865,12 @@ function validateOrden(input) {
   if (input.tipo === ORDER_TYPES.PARA_LLEVAR) {
     if (!input.cliente) {
       errors.push("El nombre para llevar es obligatorio.");
+    } else if (!isValidNameLength(input.cliente)) {
+      errors.push("El campo de texto debe contener entre 2 y 50 caracteres.");
     } else if (!isAlphanumericText(input.cliente)) {
       errors.push(
         "El nombre para llevar solo permite caracteres alfanumericos y espacios."
       );
-    } else if (input.cliente.length > 60) {
-      errors.push("El nombre para llevar no puede exceder 60 caracteres.");
     }
 
     if (input.mesaId) {
@@ -940,7 +963,7 @@ function readMeseroForm() {
     id: normalizeId(meseroIdInput.value),
     nombre: normalizeText(meseroNombreInput.value),
     dni: meseroDniInput.value.trim(),
-    telefono: meseroTelefonoInput.value.trim(),
+    celular: meseroCelularInput.value.trim(),
     estado: meseroEstadoInput.value,
   };
 }
@@ -1026,7 +1049,7 @@ function createItemRow(prefillProductId = "", prefillQty = 1) {
     <div class="col-span-7">
       <select class="product-select w-full rounded-lg border border-outline-variant bg-surface px-sm py-xs text-body-md" required>
         <option value="">Seleccione producto</option>
-        ${state.productos.filter(p => p.estado && p.disponibilidad).map(p => `<option value="${p.id}">${p.nombre} (S/ ${p.precio})</option>`).join('')}
+        ${state.productos.filter(p => p.activo !== false && p.estado && p.disponibilidad).map(p => `<option value="${p.id}">${p.nombre} (S/ ${p.precio})</option>`).join('')}
       </select>
     </div>
     <div class="col-span-3">
@@ -1124,7 +1147,7 @@ function updateOrderTypeFields(tipo) {
 
 function renderMesas() {
   mesaBody.innerHTML = "";
-  const mesas = [...state.mesas].sort((a, b) => a.numero - b.numero);
+  const mesas = state.mesas.filter(m => m.activo !== false).sort((a, b) => a.numero - b.numero);
   mesaEmpty.style.display = mesas.length ? "none" : "block";
   mesas.forEach((mesa) => {
     const row = document.createElement("tr");
@@ -1146,16 +1169,14 @@ function renderMesas() {
 
 function renderMeseros() {
   meseroBody.innerHTML = "";
-  const meseros = [...state.meseros].sort((a, b) =>
-    a.nombre.localeCompare(b.nombre)
-  );
+  const meseros = state.meseros.filter(m => m.activo !== false).sort((a, b) => a.nombre.localeCompare(b.nombre));
   meseroEmpty.style.display = meseros.length ? "none" : "block";
   meseros.forEach((mesero) => {
     const row = document.createElement("tr");
     row.appendChild(createCell(mesero.id));
     row.appendChild(createCell(mesero.nombre));
     row.appendChild(createCell(mesero.dni));
-    row.appendChild(createCell(mesero.telefono));
+    row.appendChild(createCell(mesero.celular));
     row.appendChild(createCell(mesero.estado));
 
     const actions = document.createElement("td");
@@ -1172,9 +1193,7 @@ function renderMeseros() {
 
 function renderProductos() {
   productoBody.innerHTML = "";
-  const productos = [...state.productos].sort((a, b) =>
-    a.nombre.localeCompare(b.nombre)
-  );
+  const productos = state.productos.filter(p => p.activo !== false).sort((a, b) => a.nombre.localeCompare(b.nombre));
   productoEmpty.style.display = productos.length ? "none" : "block";
   productos.forEach((producto) => {
     const row = document.createElement("tr");
@@ -1207,7 +1226,7 @@ function renderOrdenSelects() {
 
   ordenMesaInput.innerHTML = '<option value="">Seleccione</option>';
   state.mesas
-    .filter((mesa) => mesa.estado === "LIBRE" && mesa.habilitada)
+    .filter((mesa) => mesa.activo !== false && mesa.estado === "LIBRE" && mesa.habilitada)
     .sort((a, b) => a.numero - b.numero)
     .forEach((mesa) => {
       const option = document.createElement("option");
@@ -1221,7 +1240,7 @@ function renderOrdenSelects() {
 
   ordenMeseroInput.innerHTML = '<option value="">Seleccione</option>';
   state.meseros
-    .filter((mesero) => mesero.estado === "ACTIVO")
+    .filter((mesero) => mesero.activo !== false && mesero.estado === "ACTIVO")
     .sort((a, b) => a.nombre.localeCompare(b.nombre))
     .forEach((mesero) => {
       const option = document.createElement("option");
@@ -1342,7 +1361,7 @@ function renderDashboardSummary() {
   if (!dashboardMesaLibre || !dashboardMesaOcupada || !dashboardMesaDeshabilitada) {
     return;
   }
-  const summary = state.mesas.reduce(
+  const summary = state.mesas.filter(m => m.activo !== false).reduce(
     (acc, mesa) => {
       const disabled = mesa.estado === "DESHABILITADA" || !mesa.habilitada;
       if (disabled) {
@@ -1367,9 +1386,7 @@ function renderDashboardMeseros() {
     return;
   }
   dashboardMeseroBody.innerHTML = "";
-  const meseros = [...state.meseros].sort((a, b) =>
-    a.nombre.localeCompare(b.nombre)
-  );
+  const meseros = state.meseros.filter(m => m.activo !== false).sort((a, b) => a.nombre.localeCompare(b.nombre));
   dashboardMeseroEmpty.style.display = meseros.length ? "none" : "block";
 
   meseros.forEach((mesero) => {
@@ -1390,7 +1407,7 @@ function renderDashboardTables() {
     return;
   }
   dashboardTableGrid.innerHTML = "";
-  const mesas = [...state.mesas].sort((a, b) => a.numero - b.numero);
+  const mesas = state.mesas.filter(m => m.activo !== false).sort((a, b) => a.numero - b.numero);
   if (!mesas.length) {
     const empty = document.createElement("div");
     empty.className =
@@ -1532,10 +1549,10 @@ function handleMesaSubmit(event) {
     validateMesa(input);
     if (state.editingMesaId) {
       state.mesas = state.mesas.map((mesa) =>
-        mesa.id === state.editingMesaId ? input : mesa
+        mesa.id === state.editingMesaId ? { ...input, activo: mesa.activo ?? true } : mesa
       );
     } else {
-      state.mesas.push(input);
+      state.mesas.push({ ...input, activo: true });
     }
     saveList(STORAGE_KEYS.mesas, state.mesas);
     resetMesaForm();
@@ -1562,10 +1579,10 @@ function handleMeseroSubmit(event) {
     validateMesero(input);
     if (state.editingMeseroId) {
       state.meseros = state.meseros.map((mesero) =>
-        mesero.id === state.editingMeseroId ? input : mesero
+        mesero.id === state.editingMeseroId ? { ...input, activo: mesero.activo ?? true } : mesero
       );
     } else {
-      state.meseros.push(input);
+      state.meseros.push({ ...input, activo: true });
     }
     saveList(STORAGE_KEYS.meseros, state.meseros);
     resetMeseroForm();
@@ -1596,10 +1613,10 @@ function handleProductoSubmit(event) {
     };
     if (state.editingProductoId) {
       state.productos = state.productos.map((item) =>
-        item.id === state.editingProductoId ? producto : item
+        item.id === state.editingProductoId ? { ...producto, activo: item.activo ?? true } : item
       );
     } else {
-      state.productos.push(producto);
+      state.productos.push({ ...producto, activo: true });
     }
     saveList(STORAGE_KEYS.productos, state.productos);
     resetProductoForm();
@@ -1771,6 +1788,12 @@ function handleBillingSubmit(event) {
 
   if (receivedCents < state.currentOrderTotalCents) {
     alert("⚠️ Dinero insuficiente. El monto recibido debe cubrir el total.");
+    return;
+  }
+  
+  const customerName = billingCustomerName.value.trim();
+  if (customerName && !isStrictAlphaText(customerName)) {
+    alert("⚠️ Bloqueo de Seguridad: El nombre del cliente solo debe contener letras.");
     return;
   }
 
@@ -1981,7 +2004,7 @@ function handleMesaActions(event) {
     if (!confirm("Deseas eliminar esta mesa?")) {
       return;
     }
-    state.mesas = state.mesas.filter((mesa) => mesa.id !== id);
+    state.mesas = state.mesas.map((mesa) => mesa.id === id ? { ...mesa, activo: false } : mesa);
     saveList(STORAGE_KEYS.mesas, state.mesas);
     renderMesas();
   }
@@ -2002,7 +2025,7 @@ function handleMeseroActions(event) {
     meseroIdInput.value = mesero.id;
     meseroNombreInput.value = mesero.nombre;
     meseroDniInput.value = mesero.dni;
-    meseroTelefonoInput.value = mesero.telefono;
+    meseroCelularInput.value = mesero.celular;
     meseroEstadoInput.value = mesero.estado;
     state.editingMeseroId = mesero.id;
     meseroIdInput.readOnly = true;
@@ -2021,7 +2044,7 @@ function handleMeseroActions(event) {
     if (!confirm("Deseas eliminar este mesero?")) {
       return;
     }
-    state.meseros = state.meseros.filter((mesero) => mesero.id !== id);
+    state.meseros = state.meseros.map((mesero) => mesero.id === id ? { ...mesero, activo: false } : mesero);
     saveList(STORAGE_KEYS.meseros, state.meseros);
     renderMeseros();
   }
@@ -2055,7 +2078,7 @@ function handleProductoActions(event) {
     if (hasProductOrders(id)) {
       state.productos = state.productos.map((producto) =>
         producto.id === id
-          ? { ...producto, estado: false, disponibilidad: false }
+          ? { ...producto, activo: false, estado: false, disponibilidad: false }
           : producto
       );
       saveList(STORAGE_KEYS.productos, state.productos);
@@ -2068,7 +2091,7 @@ function handleProductoActions(event) {
     if (!confirm("Deseas eliminar este producto?")) {
       return;
     }
-    state.productos = state.productos.filter((producto) => producto.id !== id);
+    state.productos = state.productos.map((producto) => producto.id === id ? { ...producto, activo: false } : producto);
     saveList(STORAGE_KEYS.productos, state.productos);
     renderProductos();
   }
