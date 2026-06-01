@@ -268,11 +268,9 @@ function seedMockData() {
     ];
 
     saveList(STORAGE_KEYS.productos, mockProductos);
-    console.log("✅ [SEED] Productos iniciales guardados.");
 }
 
 function initState() {
-  console.log("🚀 [SISTEMA] Iniciando ciclo de vida de la aplicación...");
   try {
     // 1. CONTROL DE PERSISTENCIA REAL: Verificar si el almacenamiento no existe o tiene arreglos vacíos
     let isAppEmpty = false;
@@ -285,41 +283,31 @@ function initState() {
     }
 
     if (isAppEmpty) {
-      console.log("ℹ️ [INFO] LocalStorage incompleto o vacío. Cargando Mock Data de fábrica...");
       seedMockData();
-    } else {
-      console.log("🔄 [INFO] Persistencia detectada. Cargando datos existentes del usuario...");
     }
 
     // 2. CARGA DINÁMICA CON TRAZABILIDAD
     try {
       state.mesas = loadList(STORAGE_KEYS.mesas).map(ensureMesaDefaults);
-      console.log(`✅ [OK] Mesas cargadas. (Total: ${state.mesas.length})`);
-    } catch (e) { console.error("❌ [ERROR] Fallo al cargar Mesas:", e); }
+    } catch (e) { }
 
     try {
       state.meseros = loadList(STORAGE_KEYS.meseros);
-      console.log(`✅ [OK] Meseros cargados. (Total: ${state.meseros.length})`);
-    } catch (e) { console.error("❌ [ERROR] Fallo al cargar Meseros:", e); }
+    } catch (e) { }
 
     try {
       state.productos = loadList(STORAGE_KEYS.productos);
-      console.log(`✅ [OK] Productos cargados. (Total: ${state.productos.length})`);
-    } catch (e) { console.error("❌ [ERROR] Fallo al cargar Productos:", e); }
+    } catch (e) { }
 
     try {
       state.ordenes = loadList(STORAGE_KEYS.ordenes).map(ensureOrderDefaults);
-      console.log(`✅ [OK] Órdenes cargadas. (Total: ${state.ordenes.length})`);
-    } catch (e) { console.error("❌ [ERROR] Fallo al cargar Órdenes:", e); }
+    } catch (e) { }
 
     // 3. DISPARAR RENDERIZADO INICIAL
-    console.log("🎨 [UI] Ejecutando renderizado inicial de componentes...");
     renderAll();
-    console.log("✨ [SISTEMA] Aplicación lista para el usuario.");
 
   } catch (error) {
     state.loadError = error.message;
-    console.error("❌ [ERROR CRÍTICO] Fallo general en la inicialización:", error);
     if (globalError) {
       globalError.textContent = `Error crítico: ${error.message}. Revisa la consola (F12).`;
     }
@@ -2443,23 +2431,19 @@ function bindEvents() {
 function renderAll() {
   try {
     renderMesas();
-    console.log("📊 [RENDER] Grid de mesas actualizado.");
-  } catch (e) { console.error("❌ [ERROR] Fallo en renderMesas:", e); }
+  } catch (e) { }
 
   try {
     renderMeseros();
-    console.log("📊 [RENDER] Lista de meseros actualizada.");
-  } catch (e) { console.error("❌ [ERROR] Fallo en renderMeseros:", e); }
+  } catch (e) { }
 
   try {
     renderProductos();
-    console.log("📊 [RENDER] Catálogo de productos actualizado.");
-  } catch (e) { console.error("❌ [ERROR] Fallo en renderProductos:", e); }
+  } catch (e) { }
 
   try {
     renderOrdenes();
-    console.log("📊 [RENDER] Tabla de órdenes actualizada.");
-  } catch (e) { console.error("❌ [ERROR] Fallo en renderOrdenes:", e); }
+  } catch (e) { }
 
   // Inicializar formularios para mostrar los IDs automáticos al inicio
   resetMesaForm();
@@ -2469,8 +2453,7 @@ function renderAll() {
   try {
     resetOrdenForm();
     resetOrdenItemForm();
-    console.log("🧹 [UI] Formularios de órdenes reseteados.");
-  } catch (e) { console.error("❌ [ERROR] Fallo al resetear formularios:", e); }
+  } catch (e) { }
 }
 
 // 1. EVENTO DE CARGA (DOMContentLoaded):
