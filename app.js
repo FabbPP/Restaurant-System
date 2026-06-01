@@ -22,6 +22,8 @@ const state = {
   editingMeseroId: null,
   editingProductoId: null,
   currentOrderIdForItems: null,
+  currentOrderIdForBilling: null,
+  currentOrderTotalCents: 0,
   loadError: null,
 };
 
@@ -89,6 +91,19 @@ const itemsModalTitle = document.getElementById("items-modal-title");
 const itemsModalOrderId = document.getElementById("items-modal-order-id");
 const itemsModalClose = document.getElementById("items-modal-close");
 const itemsModalCancel = document.getElementById("items-modal-cancel");
+
+const billingModal = document.getElementById("billing-modal");
+const billingOrderId = document.getElementById("billing-order-id");
+const billingOrderType = document.getElementById("billing-order-type");
+const billingItemsList = document.getElementById("billing-items-list");
+const billingTotalAmount = document.getElementById("billing-total-amount");
+const billingForm = document.getElementById("billing-form");
+const billingCustomerId = document.getElementById("billing-customer-id");
+const billingCustomerName = document.getElementById("billing-customer-name");
+const billingReceivedAmount = document.getElementById("billing-received-amount");
+const billingChangeAmount = document.getElementById("billing-change-amount");
+const billingModalClose = document.getElementById("billing-modal-close");
+const billingModalCancel = document.getElementById("billing-modal-cancel");
 
 const ordenItemsContainer = document.getElementById("orden-items-container");
 const addItemRowBtn = document.getElementById("add-item-row-btn");
@@ -1561,6 +1576,106 @@ function closeItemsModal() {
   resetOrdenItemForm();
 }
 
+/**
+ * Abre el modal de facturación y cobro
+ */
+function openBillingModal(ordenId) {
+  state.currentOrderIdForBilling = ordenId;
+  const orden = state.ordenes.find((o) => o.id === ordenId);
+  if (!orden) return;
+
+  billingOrderId.textContent = orden.id;
+  billingOrderType.textContent = orden.mesaId ? `MESA ${orden.mesaId}` : "PARA LLEVAR";
+
+  // Renderizar detalle para verificación del cajero
+  billingItemsList.innerHTML = "";
+  orden.items.forEach((item) => {
+    const li = document.createElement("li");
+    li.className = "flex justify-between";
+    li.innerHTML = `<span>${item.nombre} x${item.cantidad}</span> <span>S/ ${formatCents(item.precioCents * item.cantidad)}</span>`;
+    billingItemsList.appendChild(li);
+  });
+
+  if (orden.tipo === ORDER_TYPES.PARA_LLEVAR) {
+    const li = document.createElement("li");
+    li.className = "flex justify-between italic text-on-surface-variant";
+    li.innerHTML = `<span>Recargo Packaging</span> <span>S/ ${formatCents(PACKAGING_FEE_CENTS)}</span>`;
+    billingItemsList.appendChild(li);
+  }
+
+  const totals = calculateOrderTotals(orden);
+  state.currentOrderTotalCents = totals.totalCents;
+  billingTotalAmount.textContent = `S/ ${formatCents(totals.totalCents)}`;
+
+  // Limpiar campos
+  billingCustomerId.value = "";
+  billingCustomerName.value = orden.cliente || "";
+  billingReceivedAmount.value = "";
+  billingChangeAmount.textContent = "S/ 0.00";
+  billingChangeAmount.className = "font-display text-on-surface-variant";
+
+  billingModal.classList.remove("hidden");
+}
+
+function closeBillingModal() {
+  billingModal.classList.add("hidden");
+  state.currentOrderIdForBilling = null;
+  state.currentOrderTotalCents = 0;
+}
+
+/**
+ * Calcula el vuelto en tiempo real
+ */
+function updateBillingChange() {
+  const received = parseFloat(billingReceivedAmount.value) || 0;
+  const receivedCents = Math.round(received * 100);
+  const totalCents = state.currentOrderTotalCents;
+  const changeCents = receivedCents - totalCents;
+
+  if (receivedCents >= totalCents) {
+    billingChangeAmount.textContent = `S/ ${formatCents(changeCents)}`;
+    billingChangeAmount.className = "font-display text-green-700";
+  } else {
+    billingChangeAmount.textContent = "S/ 0.00";
+    billingChangeAmount.className = "font-display text-error";
+  }
+}
+
+function handleBillingSubmit(event) {
+  event.preventDefault();
+  const received = parseFloat(billingReceivedAmount.value) || 0;
+  const receivedCents = Math.round(received * 100);
+
+  if (receivedCents < state.currentOrderTotalCents) {
+    alert("⚠️ Dinero insuficiente. El monto recibido debe cubrir el total.");
+    return;
+  }
+
+  const ordenId = state.currentOrderIdForBilling;
+  const orden = state.ordenes.find((o) => o.id === ordenId);
+  if (!orden) return;
+
+  // Actualizar datos de la orden y estado
+  orden.estado = "PAGADO";
+  orden.clienteDni = billingCustomerId.value.trim();
+  orden.clienteNombre = billingCustomerName.value.trim();
+
+  // Liberar la mesa automáticamente
+  if (orden.mesaId) {
+    const mesa = state.mesas.find((m) => m.id === orden.mesaId);
+    if (mesa) {
+      mesa.estado = mesa.habilitada ? "LIBRE" : "DESHABILITADA";
+    }
+  }
+
+  saveList(STORAGE_KEYS.ordenes, state.ordenes);
+  saveList(STORAGE_KEYS.mesas, state.mesas);
+  
+  closeBillingModal();
+  renderOrdenes();
+  renderMesas();
+}
+
 function handleOrdenItemSubmit(event) {
   event.preventDefault();
   clearErrors();
@@ -1633,6 +1748,13 @@ function handleOrdenActions(event) {
       }
 
       const nextState = getNextOrderState(orden.estado);
+      
+      // Si el siguiente estado es PAGADO, abrimos el modal de cobro en lugar de avanzar directo
+      if (nextState === "PAGADO") {
+        openBillingModal(id);
+        return;
+      }
+
       let mesasActualizadas = state.mesas;
       if (nextState === "PAGADO" && orden.mesaId) {
         const mesa = state.mesas.find((item) => item.id === orden.mesaId);
@@ -1923,6 +2045,11 @@ function bindEvents() {
   addItemRowBtn.addEventListener("click", createItemRow);
   itemsModalClose.addEventListener("click", closeItemsModal);
   itemsModalCancel.addEventListener("click", closeItemsModal);
+  
+  billingForm.addEventListener("submit", handleBillingSubmit);
+  billingReceivedAmount.addEventListener("input", updateBillingChange);
+  billingModalClose.addEventListener("click", closeBillingModal);
+  billingModalCancel.addEventListener("click", closeBillingModal);
   
   ordenTipoInput.addEventListener("change", (event) => {
     updateOrderTypeFields(event.target.value);

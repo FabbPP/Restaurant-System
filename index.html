@@ -960,6 +960,79 @@
       </div>
     </div>
 
+    <!-- MODAL DE COBRO (FACTURACIÓN) -->
+    <div id="billing-modal" class="fixed inset-0 z-[60] flex items-center justify-center hidden">
+      <div class="absolute inset-0 modal-overlay" id="billing-modal-overlay"></div>
+      <div class="relative bg-surface p-xl rounded-xl border border-outline-variant shadow-xl w-full max-w-lg modal-content flex flex-col">
+        <div class="flex justify-between items-center mb-md">
+          <h3 class="font-headline-md text-headline-md">Facturación y Cobro</h3>
+          <button type="button" class="material-symbols-outlined hover:bg-surface-container-high p-xs rounded-full" id="billing-modal-close">close</button>
+        </div>
+
+        <div class="overflow-y-auto pr-xs space-y-md">
+          <!-- Resumen de Orden -->
+          <div class="bg-surface-container-low p-md rounded-lg border border-outline-variant space-y-sm">
+            <div class="flex justify-between items-center">
+              <span class="font-label-md text-on-surface-variant">ORDEN:</span>
+              <span id="billing-order-id" class="font-data-mono font-bold text-primary"></span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="font-label-md text-on-surface-variant">TIPO DE SERVICIO:</span>
+              <span id="billing-order-type" class="font-bold"></span>
+            </div>
+            <div class="border-t border-outline-variant pt-sm">
+              <p class="font-label-md text-on-surface-variant mb-xs">RESUMEN DE PRODUCTOS:</p>
+              <ul id="billing-items-list" class="text-body-md space-y-1 max-h-32 overflow-y-auto pr-xs"></ul>
+            </div>
+            <div class="border-t border-outline-variant pt-sm flex justify-between items-center">
+              <span class="font-headline-sm">TOTAL A PAGAR:</span>
+              <span id="billing-total-amount" class="font-display text-primary"></span>
+            </div>
+          </div>
+
+          <form id="billing-form" class="space-y-md">
+            <!-- Datos del Cliente -->
+            <div class="grid grid-cols-2 gap-md">
+              <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
+                DNI / RUC
+                <input id="billing-customer-id" type="text" class="rounded-lg border border-outline-variant bg-surface px-sm py-xs" placeholder="Ingresar ID">
+              </label>
+              <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
+                Nombre del Cliente
+                <input id="billing-customer-name" type="text" class="rounded-lg border border-outline-variant bg-surface px-sm py-xs" placeholder="Nombre completo">
+              </label>
+            </div>
+
+            <!-- Pago en Efectivo -->
+            <div class="bg-secondary-container/30 p-md rounded-lg border border-outline-variant">
+              <label class="flex flex-col gap-xs text-label-md text-on-secondary-container font-bold mb-md">
+                Monto Recibido (S/)
+                <input id="billing-received-amount" type="number" step="0.01" required class="rounded-lg border border-outline-variant bg-surface px-sm py-md text-headline-md text-center focus:ring-2 focus:ring-primary outline-none">
+              </label>
+              <div class="flex justify-between items-center px-sm">
+                <span class="font-headline-sm text-on-surface-variant">Vuelto:</span>
+                <span id="billing-change-amount" class="font-display text-green-700">S/ 0.00</span>
+              </div>
+            </div>
+
+            <div class="flex gap-sm pt-md border-t border-outline-variant">
+              <button
+                id="billing-modal-confirm"
+                class="flex-1 py-md bg-primary text-on-primary rounded-lg font-bold flex items-center justify-center gap-sm active:scale-[0.98] transition-all"
+                type="submit"
+              >
+                <span class="material-symbols-outlined">receipt_long</span>
+                Confirmar Pago
+              </button>
+              <button type="button" id="billing-modal-cancel" class="px-lg py-md border border-outline-variant rounded-lg text-on-surface-variant hover:bg-surface-container-low font-bold">
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
     <script src="app.js" defer></script>
   </body>
 </html>
