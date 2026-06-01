@@ -102,7 +102,7 @@
               xl: "32px",
               xs: "8px",
               sm: "12px",
-              "sidebar-width": "320px",
+              "sidebar-width": "260px",
               lg: "24px",
               gutter: "16px",
             },
@@ -187,13 +187,7 @@
           Meseros
         </button>
       </nav>
-      <button
-        class="mt-xl w-full py-md bg-primary text-on-primary font-bold rounded-lg flex justify-center items-center gap-sm active:opacity-80 transition-opacity"
-        type="button"
-      >
-        <span class="material-symbols-outlined">add</span>
-        Nuevo turno
-      </button>
+      
       <div class="mt-auto border-t border-outline-variant pt-md space-y-base">
 
       </div>
@@ -261,7 +255,7 @@
                 </button>
               </div>
 
-              <form id="orden-form" class="grid gap-md">
+              <form id="orden-form" class="grid gap-md" novalidate>
                 <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
                   ID
                   <input
@@ -271,6 +265,7 @@
                     readonly
                     class="rounded-lg border border-outline-variant bg-surface px-sm py-xs"
                   />
+                  <span id="error-orden-id" class="error-message" style="color: red; display: none; font-size: 12px;"></span>
                 </label>
                 <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
                   Tipo
@@ -283,6 +278,7 @@
                     <option value="MESA">MESA</option>
                     <option value="PARA_LLEVAR">PARA LLEVAR</option>
                   </select>
+                  <span id="error-orden-tipo" class="error-message" style="color: red; display: none; font-size: 12px;"></span>
                 </label>
                 <label
                   data-order-field="mesa"
@@ -296,6 +292,7 @@
                   >
                     <option value="">Seleccione</option>
                   </select>
+                  <span id="error-orden-mesa" class="error-message" style="color: red; display: none; font-size: 12px;"></span>
                 </label>
                 <label
                   data-order-field="mesero"
@@ -309,6 +306,7 @@
                   >
                     <option value="">Seleccione</option>
                   </select>
+                  <span id="error-orden-mesero" class="error-message" style="color: red; display: none; font-size: 12px;"></span>
                 </label>
                 <label
                   data-order-field="estado"
@@ -322,6 +320,7 @@
                   >
                     <!-- Se llena dinámicamente -->
                   </select>
+                  <span id="error-orden-estado" class="error-message" style="color: red; display: none; font-size: 12px;"></span>
                 </label>
                 <label
                   data-order-field="cliente"
@@ -338,6 +337,7 @@
                     pattern="[A-Za-zÁéíóúÁÉÍÓÚñÑ ]+"
                     class="rounded-lg border border-outline-variant bg-surface px-sm py-xs"
                   />
+                  <span id="error-orden-cliente" class="error-message" style="color: red; display: none; font-size: 12px;"></span>
                 </label>
                 <div class="flex gap-sm">
                   <button
@@ -493,7 +493,7 @@
         <div
           class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg mb-lg"
         >
-          <form id="producto-form" class="grid gap-md md:grid-cols-2">
+          <form id="producto-form" class="grid gap-md md:grid-cols-2" novalidate>
             <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
               ID
               <input
@@ -505,6 +505,7 @@
                 required
                 class="rounded-lg border border-outline-variant bg-surface-container-low cursor-not-allowed px-sm py-xs"
               />
+              <span id="error-producto-id" class="error-message" style="color: red; display: none; font-size: 12px;"></span>
             </label>
             <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
               Nombre
@@ -519,6 +520,7 @@
                 required
                 class="rounded-lg border border-outline-variant bg-surface px-sm py-xs"
               />
+              <span id="error-producto-nombre" class="error-message" style="color: red; display: none; font-size: 12px;"></span>
             </label>
             <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
               Precio (incluye impuestos)
@@ -532,6 +534,7 @@
                 required
                 class="rounded-lg border border-outline-variant bg-surface px-sm py-xs"
               />
+              <span id="error-producto-precio" class="error-message" style="color: red; display: none; font-size: 12px;"></span>
             </label>
             <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
               Disponibilidad
@@ -544,6 +547,7 @@
                 <option value="true">DISPONIBLE</option>
                 <option value="false">NO DISPONIBLE</option>
               </select>
+              <span id="error-producto-disponibilidad" class="error-message" style="color: red; display: none; font-size: 12px;"></span>
             </label>
             <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
               Estado
@@ -556,6 +560,7 @@
                 <option value="true">ACTIVO</option>
                 <option value="false">INACTIVO</option>
               </select>
+              <span id="error-producto-estado" class="error-message" style="color: red; display: none; font-size: 12px;"></span>
             </label>
             <label class="flex flex-col gap-xs text-label-md text-on-surface-variant md:col-span-2">
               Descripcion
@@ -566,6 +571,7 @@
                 required
                 class="rounded-lg border border-outline-variant bg-surface px-sm py-xs"
               ></textarea>
+              <span id="error-producto-descripcion" class="error-message" style="color: red; display: none; font-size: 12px;"></span>
             </label>
             <div class="flex gap-sm md:col-span-2">
               <button
@@ -655,7 +661,7 @@
         <div
           class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg mb-lg"
         >
-          <form id="mesa-form" class="grid gap-md md:grid-cols-2">
+          <form id="mesa-form" class="grid gap-md md:grid-cols-2" novalidate>
             <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
               ID
               <input
@@ -668,6 +674,7 @@
                 required
                 class="rounded-lg border border-outline-variant bg-surface-container-low cursor-not-allowed px-sm py-xs"
               />
+              <span id="error-mesa-id" class="error-message" style="color: red; display: none; font-size: 12px;"></span>
             </label>
             <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
               Numero
@@ -680,6 +687,7 @@
                 required
                 class="rounded-lg border border-outline-variant bg-surface-container-low cursor-not-allowed px-sm py-xs"
               />
+              <span id="error-mesa-numero" class="error-message" style="color: red; display: none; font-size: 12px;"></span>
             </label>
             <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
               Capacidad
@@ -692,6 +700,7 @@
                 required
                 class="rounded-lg border border-outline-variant bg-surface px-sm py-xs"
               />
+              <span id="error-mesa-capacidad" class="error-message" style="color: red; display: none; font-size: 12px;"></span>
             </label>
             <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
               Estado
@@ -705,6 +714,7 @@
                 <option value="OCUPADA">OCUPADA</option>
                 <option value="DESHABILITADA">DESHABILITADA</option>
               </select>
+              <span id="error-mesa-estado" class="error-message" style="color: red; display: none; font-size: 12px;"></span>
             </label>
             <div class="flex gap-sm md:col-span-2">
               <button
@@ -788,7 +798,7 @@
         <div
           class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg mb-lg"
         >
-          <form id="mesero-form" class="grid gap-md md:grid-cols-2">
+          <form id="mesero-form" class="grid gap-md md:grid-cols-2" novalidate>
             <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
               ID
               <input
@@ -801,6 +811,7 @@
                 required
                 class="rounded-lg border border-outline-variant bg-surface-container-low cursor-not-allowed px-sm py-xs"
               />
+              <span id="error-mesero-id" class="error-message" style="color: red; display: none; font-size: 12px;"></span>
             </label>
             <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
               Nombre Completo
@@ -815,6 +826,7 @@
                 required
                 class="rounded-lg border border-outline-variant bg-surface px-sm py-xs"
               />
+              <span id="error-mesero-nombre" class="error-message" style="color: red; display: none; font-size: 12px;"></span>
             </label>
             <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
               DNI
@@ -830,6 +842,7 @@
                 required
                 class="rounded-lg border border-outline-variant bg-surface px-sm py-xs"
               />
+              <span id="error-mesero-dni" class="error-message" style="color: red; display: none; font-size: 12px;"></span>
             </label>
             <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
               Número de Celular
@@ -845,6 +858,7 @@
                 required
                 class="rounded-lg border border-outline-variant bg-surface px-sm py-xs"
               />
+              <span id="error-mesero-celular" class="error-message" style="color: red; display: none; font-size: 12px;"></span>
             </label>
             <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
               Estado
@@ -857,6 +871,7 @@
                 <option value="ACTIVO">ACTIVO</option>
                 <option value="INACTIVO">INACTIVO</option>
               </select>
+              <span id="error-mesero-estado" class="error-message" style="color: red; display: none; font-size: 12px;"></span>
             </label>
             <div class="flex gap-sm md:col-span-2">
               <button
@@ -943,7 +958,7 @@
           <span id="items-modal-order-id" class="font-data-mono font-bold text-primary"></span>
         </div>
 
-        <form id="orden-item-form" class="flex flex-col gap-md overflow-hidden">
+        <form id="orden-item-form" class="flex flex-col gap-md overflow-hidden" novalidate>
           <div class="flex-1 overflow-y-auto pr-base space-y-md">
             <div class="grid grid-cols-12 gap-xs px-base text-label-md text-on-surface-variant font-bold">
               <div class="col-span-7">Producto</div>
@@ -1015,12 +1030,13 @@
             </div>
           </div>
 
-          <form id="billing-form" class="space-y-md">
+          <form id="billing-form" class="space-y-md" novalidate>
             <!-- Datos del Cliente -->
             <div class="grid grid-cols-2 gap-md">
               <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
                 DNI / RUC
                 <input id="billing-customer-id" type="text" class="rounded-lg border border-outline-variant bg-surface px-sm py-xs" placeholder="Ingresar ID">
+                <span id="error-billing-customer-id" class="error-message" style="color: red; display: none; font-size: 12px;"></span>
               </label>
               <label class="flex flex-col gap-xs text-label-md text-on-surface-variant">
                 Nombre del Cliente
@@ -1029,6 +1045,7 @@
                   maxlength="50"
                   pattern="[A-Za-zÁéíóúÁÉÍÓÚñÑ ]+"
                 >
+                <span id="error-billing-customer-name" class="error-message" style="color: red; display: none; font-size: 12px;"></span>
               </label>
             </div>
 
@@ -1037,6 +1054,7 @@
               <label class="flex flex-col gap-xs text-label-md text-on-secondary-container font-bold mb-md">
                 Monto Recibido (S/)
                 <input id="billing-received-amount" type="number" step="0.01" required class="rounded-lg border border-outline-variant bg-surface px-sm py-md text-headline-md text-center focus:ring-2 focus:ring-primary outline-none">
+                <span id="error-billing-received-amount" class="error-message" style="color: red; display: none; font-size: 12px;"></span>
               </label>
               <div class="flex justify-between items-center px-sm">
                 <span class="font-headline-sm text-on-surface-variant">Vuelto:</span>

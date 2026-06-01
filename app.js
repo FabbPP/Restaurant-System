@@ -681,6 +681,31 @@ function clearErrors() {
   ordenErrors.innerHTML = "";
   ordenItemErrors.innerHTML = "";
   globalError.textContent = state.loadError ? globalError.textContent : "";
+  clearFieldErrors();
+}
+
+/**
+ * Mapea errores de validación a contenedores específicos bajo cada input
+ */
+function displayFieldErrors(errors, mapping) {
+  errors.forEach(msg => {
+    for (const [keyword, spanId] of Object.entries(mapping)) {
+      if (msg.includes(keyword)) {
+        const span = document.getElementById(spanId);
+        if (span) {
+          span.textContent = msg;
+          span.style.display = "block";
+        }
+      }
+    }
+  });
+}
+
+function clearFieldErrors() {
+  document.querySelectorAll(".error-message").forEach(span => {
+    span.textContent = "";
+    span.style.display = "none";
+  });
 }
 
 function validateMesa(input) {
@@ -827,7 +852,9 @@ function validateProducto(input) {
   }
 
   if (!input.descripcion) {
-    errors.push("La descripcion es obligatoria.");
+    errors.push("La descripción es obligatoria.");
+  } else if (!isValidNameLength(input.descripcion)) {
+    errors.push("La descripción debe contener entre 2 y 50 caracteres.");
   } else if (!isStrictAlphaText(input.descripcion)) {
     errors.push("Error de Seguridad: La descripción NO permite números ni símbolos...");
   }
@@ -1081,6 +1108,7 @@ function createItemRow(prefillProductId = "", prefillQty = 1) {
     </div>
     <div class="col-span-3">
       <input type="number" class="qty-input w-full rounded-lg border border-outline-variant bg-surface px-sm py-xs text-center text-body-md" value="${prefillQty}" min="1" max="99" ${prefillProductId ? '' : 'disabled'} />
+      <span class="error-message text-error text-[10px] hidden" style="color: red; display: none; font-size: 11px;"></span>
     </div>
     <div class="col-span-2 flex justify-end">
       <button type="button" class="remove-row-btn text-error hover:bg-error-container p-xs rounded-full transition-colors">
@@ -1593,7 +1621,12 @@ function handleMesaSubmit(event) {
     renderMesas();
   } catch (error) {
     if (error instanceof ValidationError) {
-      renderErrors(mesaErrors, error.errors);
+      displayFieldErrors(error.errors, {
+        "ID": "error-mesa-id",
+        "numero": "error-mesa-numero",
+        "capacidad": "error-mesa-capacidad",
+        "estado": "error-mesa-estado"
+      });
       return;
     }
     globalError.textContent = error.message;
@@ -1605,6 +1638,7 @@ function handleMesaSubmit(event) {
 function handleMeseroSubmit(event) {
   event.preventDefault();
   clearErrors();
+  clearFieldErrors();
 
   const submitBtn = event.target.querySelector('button[type="submit"]');
   if (submitBtn) submitBtn.disabled = true; // Parche: Prevención de duplicados
@@ -1629,7 +1663,14 @@ function handleMeseroSubmit(event) {
     renderMeseros();
   } catch (error) {
     if (error instanceof ValidationError) {
-      renderErrors(meseroErrors, error.errors);
+      displayFieldErrors(error.errors, {
+        "ID": "error-mesero-id",
+        "nombre": "error-mesero-nombre",
+        "campo": "error-mesero-nombre",
+        "DNI": "error-mesero-dni",
+        "celular": "error-mesero-celular",
+        "estado": "error-mesero-estado"
+      });
       return;
     }
     globalError.textContent = error.message;
@@ -1641,6 +1682,7 @@ function handleMeseroSubmit(event) {
 function handleProductoSubmit(event) {
   event.preventDefault();
   clearErrors();
+  clearFieldErrors();
 
   const submitBtn = event.target.querySelector('button[type="submit"]');
   if (submitBtn) submitBtn.disabled = true;
@@ -1669,7 +1711,15 @@ function handleProductoSubmit(event) {
     renderProductos();
   } catch (error) {
     if (error instanceof ValidationError) {
-      renderErrors(productoErrors, error.errors);
+      displayFieldErrors(error.errors, {
+        "ID": "error-producto-id",
+        "nombre": "error-producto-nombre",
+        "campo": "error-producto-nombre",
+        "precio": "error-producto-precio",
+        "disponibilidad": "error-producto-disponibilidad",
+        "estado": "error-producto-estado",
+        "descrip": "error-producto-descripcion"
+      });
       return;
     }
     globalError.textContent = error.message;
@@ -1681,6 +1731,7 @@ function handleProductoSubmit(event) {
 function handleOrdenSubmit(event) {
   event.preventDefault();
   clearErrors();
+  clearFieldErrors();
 
   const submitBtn = ordenForm.querySelector('#orden-submit');
   if (submitBtn) submitBtn.disabled = true; // Parche: Seguridad en creación de comanda
@@ -1731,10 +1782,19 @@ function handleOrdenSubmit(event) {
     renderMesas();
   } catch (error) {
     if (error instanceof ValidationError) {
-      renderErrors(ordenErrors, error.errors);
-      return;
-    }
+      displayFieldErrors(error.errors, {
+        "ID": "error-orden-id",
+        "tipo": "error-orden-tipo",
+        "mesa": "error-orden-mesa",
+        "mesero": "error-orden-mesero",
+        "cliente": "error-orden-cliente",
+        "llevar": "error-orden-cliente",
+        "campo": "error-orden-cliente"
+      });
     globalError.textContent = error.message;
+    }
+  } finally {
+    if (submitBtn) submitBtn.disabled = false;
   }
 }
 
@@ -1835,22 +1895,37 @@ function updateBillingChange() {
 
 function handleBillingSubmit(event) {
   event.preventDefault();
+  clearFieldErrors();
   const submitBtn = document.getElementById("billing-modal-confirm");
   if (submitBtn) submitBtn.disabled = true; // Hacker-Proof: Bloquea cobro doble
 
-  const received = parseFloat(billingReceivedAmount.value) || 0;
-  const receivedCents = Math.round(received * 100);
-
+  const receivedVal = billingReceivedAmount.value.trim();
+  
   try {
+    // TC-CO-04: Validación de tipo decimal
+    if (receivedVal === "" || isNaN(parseFloat(receivedVal)) || !isValidPrice(receivedVal)) {
+      const errSpan = document.getElementById("error-billing-received-amount");
+      errSpan.textContent = "Alerta de validación: El monto debe ser un número decimal válido.";
+      errSpan.style.display = "block";
+      return;
+    }
+
+    const received = parseFloat(receivedVal);
+  const receivedCents = Math.round(received * 100);
+    
     if (receivedCents < state.currentOrderTotalCents) {
-      alert("⚠️ Dinero insuficiente. El monto recibido debe cubrir el total.");
+      const errSpan = document.getElementById("error-billing-received-amount");
+      errSpan.textContent = "⚠️ Dinero insuficiente. El monto recibido debe cubrir el total.";
+      errSpan.style.display = "block";
       if (submitBtn) submitBtn.disabled = false;
       return;
     }
     
     const dni = billingCustomerId.value.trim();
     if (dni && (!isDigits(dni) || dni.length !== 8)) {
-      alert("⚠️ El DNI debe tener exactamente 8 dígitos numéricos.");
+      const errSpan = document.getElementById("error-billing-customer-id");
+      errSpan.textContent = "⚠️ El DNI debe tener exactamente 8 dígitos numéricos.";
+      errSpan.style.display = "block";
       if (submitBtn) submitBtn.disabled = false;
       return;
     }
@@ -1858,12 +1933,16 @@ function handleBillingSubmit(event) {
     const customerName = billingCustomerName.value.trim();
     if (customerName) {
       if (!isValidNameLength(customerName)) {
-        alert("El campo de texto debe contener entre 2 y 50 caracteres.");
+        const errSpan = document.getElementById("error-billing-customer-name");
+        errSpan.textContent = "El campo de texto debe contener entre 2 y 50 caracteres.";
+        errSpan.style.display = "block";
         if (submitBtn) submitBtn.disabled = false;
         return;
       }
       if (!isStrictAlphaText(customerName)) {
-        alert("⚠️ Bloqueo de Seguridad: El nombre del cliente solo debe contener letras.");
+        const errSpan = document.getElementById("error-billing-customer-name");
+        errSpan.textContent = "⚠️ Bloqueo de Seguridad: El nombre del cliente solo debe contener letras.";
+        errSpan.style.display = "block";
         if (submitBtn) submitBtn.disabled = false;
         return;
       }
@@ -1900,6 +1979,7 @@ function handleBillingSubmit(event) {
 function handleOrdenItemSubmit(event) {
   event.preventDefault();
   clearErrors();
+  clearFieldErrors();
   const submitBtn = document.getElementById("items-modal-save");
   if (submitBtn) submitBtn.disabled = true;
 
@@ -1912,15 +1992,33 @@ function handleOrdenItemSubmit(event) {
 
     const rows = ordenItemsContainer.querySelectorAll(".item-row");
     const itemsToAdd = [];
+    let hasRowErrors = false;
 
     rows.forEach((row, index) => {
-      const productId = row.querySelector(".product-select").value;
-      const cantidad = parseInt(row.querySelector(".qty-input").value);
+      const productIdSelect = row.querySelector(".product-select");
+      const qtyInput = row.querySelector(".qty-input");
+      const qtyErrSpan = qtyInput.nextElementSibling;
+      const productId = productIdSelect.value;
+      const cantidadRaw = qtyInput.value.trim();
 
       if (productId) {
-        if (isNaN(cantidad) || cantidad < 1) {
-          throw new ValidationError([`Fila ${index + 1}: La cantidad debe ser al menos 1.`]);
+        // TC-IT-04
+        if (cantidadRaw === "" || !/^\d+$/.test(cantidadRaw)) {
+          qtyErrSpan.textContent = "La cantidad debe ser un numero entero.";
+          qtyErrSpan.style.display = "block";
+          hasRowErrors = true;
+          return;
         }
+
+        const cantidad = parseInt(cantidadRaw, 10);
+        // TC-IT-02
+        if (cantidad < 1) {
+          qtyErrSpan.textContent = "La cantidad debe ser al menos 1.";
+          qtyErrSpan.style.display = "block";
+          hasRowErrors = true;
+          return;
+        }
+
         const producto = state.productos.find(p => p.id === productId);
         itemsToAdd.push({
           productId: producto.id,
@@ -1930,6 +2028,8 @@ function handleOrdenItemSubmit(event) {
         });
       }
     });
+
+    if (hasRowErrors) return;
 
     if (itemsToAdd.length === 0) throw new ValidationError(["Debe seleccionar al menos un producto."]);
 

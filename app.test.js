@@ -165,7 +165,7 @@ describe('RestSystem MVP - Suite de Pruebas de Caja Negra (AVL & Particiones)', 
       const itemBad = { ordenId: "O-001", productoId: "P01", cantidad: 0 };
       
       expect(() => app.validateOrdenItem(itemOk)).not.toThrow();
-      expect(() => app.validateOrdenItem(itemBad)).toThrow(/entre 1 y 99/i);
+      expect(() => app.validateOrdenItem(itemBad)).toThrow("La cantidad debe ser al menos 1.");
     });
 
     // TC-IT-03
