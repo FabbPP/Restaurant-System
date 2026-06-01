@@ -280,7 +280,7 @@ function initState() {
       isAppEmpty = loadList(STORAGE_KEYS.mesas).length === 0 || 
                    loadList(STORAGE_KEYS.meseros).length === 0 || 
                    loadList(STORAGE_KEYS.productos).length === 0;
-    } catch (e) {
+    } catch (e) { // Parche: Si el JSON es corrupto, tratamos como vacío para evitar crash
       isAppEmpty = true; // Si hay error de formato, tratamos como vacío para regenerar
     }
 
@@ -864,8 +864,8 @@ function validateOrden(input) {
       errors.push("Debe seleccionar una mesa.");
     } else {
       const mesa = state.mesas.find((item) => item.id === input.mesaId);
-      if (!mesa) {
-        errors.push("La mesa seleccionada no existe.");
+      if (!mesa || mesa.activo === false) { // Seguridad: Bloquea asignación a mesas borradas lógicamente
+        errors.push("La mesa seleccionada no existe o no está activa.");
       } else if (mesa.estado !== "LIBRE" || !mesa.habilitada) {
         errors.push("La mesa debe estar LIBRE y habilitada.");
       } else if (getActiveOrdersByMesaId(mesa.id).length > 0) {
@@ -877,8 +877,8 @@ function validateOrden(input) {
       errors.push("Debe seleccionar un mesero.");
     } else {
       const mesero = state.meseros.find((item) => item.id === input.meseroId);
-      if (!mesero) {
-        errors.push("El mesero seleccionado no existe.");
+      if (!mesero || mesero.activo === false) { // Seguridad: Bloquea asignación a meseros borrados lógicamente
+        errors.push("El mesero seleccionado no existe o no está activo.");
       } else if (mesero.estado !== "ACTIVO") {
         errors.push("El mesero debe estar ACTIVO.");
       }
@@ -1841,57 +1841,60 @@ function handleBillingSubmit(event) {
   const received = parseFloat(billingReceivedAmount.value) || 0;
   const receivedCents = Math.round(received * 100);
 
-  if (receivedCents < state.currentOrderTotalCents) {
-    alert("⚠️ Dinero insuficiente. El monto recibido debe cubrir el total.");
-     if (submitBtn) submitBtn.disabled = false;
-    return;
-  }
-  
-  const dni = billingCustomerId.value.trim();
-  if (dni && (!isDigits(dni) || dni.length !== 8)) {
-    alert("⚠️ El DNI debe tener exactamente 8 dígitos numéricos.");
+  try {
+    if (receivedCents < state.currentOrderTotalCents) {
+      alert("⚠️ Dinero insuficiente. El monto recibido debe cubrir el total.");
+      if (submitBtn) submitBtn.disabled = false;
+      return;
+    }
+    
+    const dni = billingCustomerId.value.trim();
+    if (dni && (!isDigits(dni) || dni.length !== 8)) {
+      alert("⚠️ El DNI debe tener exactamente 8 dígitos numéricos.");
+      if (submitBtn) submitBtn.disabled = false;
+      return;
+    }
+
+    const customerName = billingCustomerName.value.trim();
+    if (customerName) {
+      if (!isValidNameLength(customerName)) {
+        alert("El campo de texto debe contener entre 2 y 50 caracteres.");
+        if (submitBtn) submitBtn.disabled = false;
+        return;
+      }
+      if (!isStrictAlphaText(customerName)) {
+        alert("⚠️ Bloqueo de Seguridad: El nombre del cliente solo debe contener letras.");
+        if (submitBtn) submitBtn.disabled = false;
+        return;
+      }
+    }
+
+    const ordenId = state.currentOrderIdForBilling;
+    const orden = state.ordenes.find((o) => o.id === ordenId);
+    if (!orden) return;
+
+    // Actualizar datos de la orden y estado
+    orden.estado = "PAGADO";
+    orden.clienteDni = billingCustomerId.value.trim();
+    orden.clienteNombre = billingCustomerName.value.trim();
+
+    // Liberar la mesa automáticamente
+    if (orden.mesaId) {
+      const mesa = state.mesas.find((m) => m.id === orden.mesaId);
+      if (mesa) {
+        mesa.estado = mesa.habilitada ? "LIBRE" : "DESHABILITADA"; // Atomicidad: Mesa libre síncrona al pago
+      }
+    }
+
+    saveList(STORAGE_KEYS.ordenes, state.ordenes);
+    saveList(STORAGE_KEYS.mesas, state.mesas);
+    
+    closeBillingModal();
+    renderOrdenes();
+    renderMesas();
+  } finally {
     if (submitBtn) submitBtn.disabled = false;
-    return;
   }
-
-  const customerName = billingCustomerName.value.trim();
-  if (customerName) {
-    if (!isValidNameLength(customerName)) {
-      alert("El campo de texto debe contener entre 2 y 50 caracteres.");
-      if (submitBtn) submitBtn.disabled = false;
-      return;
-    }
-    if (!isStrictAlphaText(customerName)) {
-      alert("⚠️ Bloqueo de Seguridad: El nombre del cliente solo debe contener letras.");
-      if (submitBtn) submitBtn.disabled = false;
-      return;
-    }
-  }
-
-  const ordenId = state.currentOrderIdForBilling;
-  const orden = state.ordenes.find((o) => o.id === ordenId);
-  if (!orden) return;
-
-  // Actualizar datos de la orden y estado
-  orden.estado = "PAGADO";
-  orden.clienteDni = billingCustomerId.value.trim();
-  orden.clienteNombre = billingCustomerName.value.trim();
-
-  // Liberar la mesa automáticamente
-  if (orden.mesaId) {
-    const mesa = state.mesas.find((m) => m.id === orden.mesaId);
-    if (mesa) {
-      mesa.estado = mesa.habilitada ? "LIBRE" : "DESHABILITADA";
-    }
-  }
-
-  saveList(STORAGE_KEYS.ordenes, state.ordenes);
-  saveList(STORAGE_KEYS.mesas, state.mesas);
-  
-  closeBillingModal();
-  renderOrdenes();
-  renderMesas();
-  // El botón se restaura al cerrar/abrir el modal
 }
 
 function handleOrdenItemSubmit(event) {
