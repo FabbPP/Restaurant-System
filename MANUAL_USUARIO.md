@@ -17,11 +17,11 @@ En el Dashboard se observan:
 4. Presiona **Crear orden**.
 
 ### Agregar items a una orden
-1. En **Items de Orden**, selecciona una orden abierta.
-2. Selecciona un producto disponible y activo.
-3. Ingresa la cantidad deseada (rango permitido: **1 a 99**).
-4. Si los datos son inválidos (cantidad 0 o ingreso de letras - TC-IT-04), aparecerá una **alerta en texto rojo debajo del input**.
-5. Presiona **Confirmar Pedido** para actualizar la comanda.
+1. En la tabla de ordenes, usa el boton **agregar platos**
+3. Selecciona un producto disponible y activo.
+4. Ingresa la cantidad deseada (rango permitido: **1 a 99**).
+5. Si los datos son inválidos (cantidad 0 o ingreso de letras - TC-IT-04), aparecerá una **alerta en texto rojo debajo del input**.
+6. Presiona **Confirmar Pedido** para actualizar la comanda.
 
 ### Avanzar estado o cerrar orden
 1. En la tabla de ordenes, usa el boton de **Acciones**.
