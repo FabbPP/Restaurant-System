@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-const app = require('./app');
+const app = require('./frontend/app');
 
 describe('RestSystem MVP - Suite de Pruebas de Caja Negra (AVL & Particiones)', () => {
   

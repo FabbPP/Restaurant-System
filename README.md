@@ -1,6 +1,13 @@
 # Restaurant-System
+
+Arquitectura: separada en dos carpetas principales:
+
+- frontend/: HTML, CSS y JavaScript del cliente (la UI existente fue movida aquí).
+- backend/: API REST con Node.js + Express y conexión a PostgreSQL (scaffold incluido).
+
 # Despliegue
-HTML + JavaScript + LocalStorage. No requiere build.
+
+HTML + JavaScript + LocalStorage disponible en frontend/. Para ejecutar el backend siga las instrucciones en backend/README.md.
 
 ## Ejecucion local
 1. Abre `index.html` en el navegador.
