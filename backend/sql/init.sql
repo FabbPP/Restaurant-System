@@ -33,7 +33,8 @@ CREATE TABLE IF NOT EXISTS ordenes (
   tipo TEXT,
   mesa_id TEXT REFERENCES mesas(id),
   mesero_id TEXT REFERENCES meseros(id),
-  cliente TEXT,
+  cliente_nombre TEXT,
+  cliente_dni TEXT,
   estado TEXT DEFAULT 'PENDIENTE',
   total_cents INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT now()
