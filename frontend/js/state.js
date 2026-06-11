@@ -41,14 +41,15 @@
       } else if (key === config.STORAGE_KEYS.ordenes) {
         payload.mesa_id = item.mesaId || null;
         payload.mesero_id = item.meseroId || null;
-        payload.cliente_nombre = item.clienteNombre || null;
+        payload.cliente_nombre = (item.clienteNombre || item.cliente || "").trim() || null;
         payload.cliente_dni = item.clienteDni || null;
         // Fallback por si el backend usa cliente_id basado en el ID del input
         payload.cliente_id = item.clienteDni || null;
-        delete payload.mesaId;
-        delete payload.meseroId;
-        delete payload.clienteNombre;
-        delete payload.clienteDni;
+        
+        // Eliminar propiedades camelCase y la propiedad temporal 'cliente'
+        const toDelete = ['mesaId', 'meseroId', 'clienteNombre', 'clienteDni', 'cliente'];
+        toDelete.forEach(prop => delete payload[prop]);
+
         if (item.items) {
           // Enviar sólo producto_id y cantidad: el backend tomará el precio desde la DB (precisión en céntimos)
           payload.items = item.items.map(it => ({
@@ -117,16 +118,28 @@
   }
 
   function calculateOrderTotals(orden) {
-    // Preferir total autoritativo del backend si existe (total_cents)
-    if (orden && (typeof orden.total_cents === 'number' || typeof orden.totalCents === 'number')) {
-      const serverTotal = typeof orden.total_cents === 'number' ? orden.total_cents : orden.totalCents;
-      const packagingFee = orden.tipo === config.ORDER_TYPES.PARA_LLEVAR ? config.PACKAGING_FEE_CENTS : 0;
-      const subtotal = Math.max(0, serverTotal - packagingFee);
-      return { subtotalCents: subtotal, packagingFeeCents: packagingFee, totalCents: serverTotal };
-    }
-    const itemsTotal = (orden.items || []).reduce((t, i) => t + ((i.precioCents || i.precio_cents || 0) * Number(i.cantidad || 0)), 0);
+    if (!orden) return { subtotalCents: 0, packagingFeeCents: 0, totalCents: 0 };
+
+    // Calculamos siempre basándonos en los ítems actuales del frontend para garantizar
+    // que la UI refleje lo que el usuario ve, incluso antes de la sincronización completa.
+    const itemsTotal = (orden.items || []).reduce((t, i) => {
+      const price = i.precioCents || i.precio_cents || 0;
+      return t + (price * Number(i.cantidad || 0));
+    }, 0);
+
     const packagingFee = orden.tipo === config.ORDER_TYPES.PARA_LLEVAR ? config.PACKAGING_FEE_CENTS : 0;
-    return { subtotalCents: itemsTotal, packagingFeeCents: packagingFee, totalCents: itemsTotal + packagingFee };
+    
+    // Si no hay items pero el servidor reporta un total (ej. historial), lo usamos como respaldo.
+    let finalTotal = itemsTotal + packagingFee;
+    if (itemsTotal === 0 && (orden.total_cents > 0 || orden.totalCents > 0)) {
+      finalTotal = orden.total_cents || orden.totalCents;
+    }
+
+    return { 
+      subtotalCents: Math.max(0, finalTotal - packagingFee), 
+      packagingFeeCents: packagingFee, 
+      totalCents: finalTotal 
+    };
   }
 
   function ensureMesaDefaults(mesa) {

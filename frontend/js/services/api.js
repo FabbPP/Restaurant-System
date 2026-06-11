@@ -81,7 +81,7 @@ export async function fetchOrdenesWithItems() {
     orders.map(async (o) => {
       try {
         const oResp = await fetch(`${API_BASE}/ordenes/${o.id}`);
-        if (!oResp.ok) return { id: o.id, tipo: o.tipo, mesaId: o.mesa_id || null, meseroId: o.mesero_id || null, cliente: o.cliente || '', estado: o.estado || 'PENDIENTE', items: [] };
+        if (!oResp.ok) return { id: o.id, tipo: o.tipo, mesaId: o.mesa_id || null, meseroId: o.mesero_id || null, clienteNombre: o.cliente_nombre || '', clienteDni: o.cliente_dni || '', estado: o.estado || 'PENDIENTE', items: [] };
         const full = await oResp.json();
         const items = (full.items || []).map(it => ({
           productId: String(it.producto_id),
@@ -94,12 +94,13 @@ export async function fetchOrdenesWithItems() {
           tipo: o.tipo,
           mesaId: o.mesa_id || null,
           meseroId: o.mesero_id || null,
-          cliente: o.cliente || '',
+          clienteNombre: o.cliente_nombre || '',
+          clienteDni: o.cliente_dni || '',
           estado: o.estado || 'PENDIENTE',
           items
         };
       } catch (e) {
-        return { id: o.id, tipo: o.tipo, mesaId: o.mesa_id || null, meseroId: o.mesero_id || null, cliente: o.cliente || '', estado: o.estado || 'PENDIENTE', items: [] };
+        return { id: o.id, tipo: o.tipo, mesaId: o.mesa_id || null, meseroId: o.mesero_id || null, clienteNombre: o.cliente_nombre || '', clienteDni: o.cliente_dni || '', estado: o.estado || 'PENDIENTE', items: [] };
       }
     })
   );
@@ -175,7 +176,8 @@ export async function upsertOrdenes(ordenesArray) {
       tipo: orden.tipo,
       mesa_id: orden.mesaId || null,
       mesero_id: orden.meseroId || null,
-      cliente: orden.cliente || null,
+      cliente_nombre: orden.clienteNombre || orden.cliente || null,
+      cliente_dni: orden.clienteDni || null,
       estado: orden.estado || 'PENDIENTE'
     };
 

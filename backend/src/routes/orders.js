@@ -33,7 +33,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   const client = await db.pool.connect();
   try {
-    const { id, tipo, mesa_id = null, mesero_id = null, cliente = null, items = [] } = req.body;
+    const { id, tipo, mesa_id = null, mesero_id = null, cliente_nombre = null, cliente_dni = null, items = [] } = req.body;
 
     const errors = [];
     if (!id || !isValidId(id)) errors.push('El id de la orden es obligatorio y debe ser valido.');
@@ -42,7 +42,7 @@ router.post('/', async (req, res) => {
       if (!mesa_id) errors.push('mesa_id es obligatorio para orden de MESA.');
       if (!mesero_id) errors.push('mesero_id es obligatorio para orden de MESA.');
     } else {
-      if (!cliente || !isValidString(cliente)) errors.push('El nombre del cliente es obligatorio para PARA_LLEVAR (2-50 chars).');
+      if (!cliente_nombre || !isValidString(cliente_nombre)) errors.push('El nombre del cliente es obligatorio para PARA_LLEVAR (2-50 chars).');
     }
 
     if (errors.length) return res.status(400).json({ errors });
@@ -64,7 +64,7 @@ router.post('/', async (req, res) => {
     }
 
     // Insert order placeholder
-    await client.query('INSERT INTO ordenes (id, tipo, mesa_id, mesero_id, cliente, estado, total_cents) VALUES ($1,$2,$3,$4,$5,$6,$7)', [id, tipo, mesa_id, mesero_id, cliente, 'PENDIENTE', 0]);
+    await client.query('INSERT INTO ordenes (id, tipo, mesa_id, mesero_id, cliente_nombre, cliente_dni, estado, total_cents) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)', [id, tipo, mesa_id, mesero_id, cliente_nombre, cliente_dni, 'PENDIENTE', 0]);
 
     // Insert items (use product price from DB to guarantee cent-precision)
     let total = 0;
@@ -110,7 +110,7 @@ router.put('/:id', async (req, res) => {
   const client = await db.pool.connect();
   try {
     const { id } = req.params;
-    const { tipo, mesa_id, mesero_id, cliente, estado, items } = req.body;
+    const { tipo, mesa_id, mesero_id, cliente_nombre, cliente_dni, estado, items } = req.body;
 
     await client.query('BEGIN');
 
@@ -157,7 +157,8 @@ router.put('/:id', async (req, res) => {
     if (tipo !== undefined) { if (!ORDER_TYPES.includes(tipo)) { await client.query('ROLLBACK'); return res.status(400).json({ error: 'Tipo inválido.' }); } fields.push(`tipo = $${i++}`); vals.push(tipo); }
     if (mesa_id !== undefined) { fields.push(`mesa_id = $${i++}`); vals.push(mesa_id); }
     if (mesero_id !== undefined) { fields.push(`mesero_id = $${i++}`); vals.push(mesero_id); }
-    if (cliente !== undefined) { if (cliente && !isValidString(cliente)) { await client.query('ROLLBACK'); return res.status(400).json({ error: 'El nombre del cliente debe tener entre 2 y 50 caracteres.' }); } fields.push(`cliente = $${i++}`); vals.push(cliente); }
+    if (cliente_nombre !== undefined) { if (cliente_nombre && !isValidString(cliente_nombre)) { await client.query('ROLLBACK'); return res.status(400).json({ error: 'El nombre del cliente debe tener entre 2 y 50 caracteres.' }); } fields.push(`cliente_nombre = $${i++}`); vals.push(cliente_nombre); }
+    if (cliente_dni !== undefined) { fields.push(`cliente_dni = $${i++}`); vals.push(cliente_dni); }
     if (estado !== undefined) { fields.push(`estado = $${i++}`); vals.push(estado); }
 
     if (fields.length > 0) {

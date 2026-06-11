@@ -1,7 +1,7 @@
 /** @jest-environment jsdom */
-const utils = require('./frontend/js/utils');
-const stateManager = require('./frontend/js/state');
-const validation = require('./frontend/js/validation');
+const utils = require('../js/utils');
+const stateManager = require('../js/state');
+const validation = require('../js/validation');
 
 // Reconstruimos el objeto 'app' que los tests de caja negra esperan unificando los módulos del frontend
 const app = {
@@ -63,6 +63,20 @@ describe('RestSystem MVP - Suite de Pruebas de Caja Negra (AVL & Particiones)', 
       
       expect(() => app.checkMesaActionLocks(app.state, "M01")).toThrow("No se puede modificar ni eliminar la mesa porque tiene órdenes asociadas.");
     });
+
+    test('TC-ME-08: Detectar duplicados de ID y Numero', () => {
+      app.state.mesas = [{ id: "M01", numero: 1, capacidad: 4, estado: "LIBRE", activo: true }];
+      const mesaDupId = { id: "M01", numero: 2, capacidad: 2, estado: "LIBRE" };
+      const mesaDupNum = { id: "M02", numero: 1, capacidad: 2, estado: "LIBRE" };
+      
+      expect(() => app.validateMesa(app.state, mesaDupId)).toThrow(/ID de la mesa ya existe/);
+      expect(() => app.validateMesa(app.state, mesaDupNum)).toThrow(/numero de mesa ya esta registrado/);
+    });
+
+    test('TC-ME-09: Validar estado inexistente', () => {
+      const mesaBadEstado = { id: "M01", numero: 1, capacidad: 4, estado: "LIMPIANDO" };
+      expect(() => app.validateMesa(app.state, mesaBadEstado)).toThrow(/El estado debe ser LIBRE, OCUPADA o DESHABILITADA/);
+    });
   });
 
   describe('Módulo: Meseros', () => {
@@ -100,6 +114,13 @@ describe('RestSystem MVP - Suite de Pruebas de Caja Negra (AVL & Particiones)', 
     test('TC-MS-08: Cruce de tipos - Letras en DNI', () => {
       const meseroLetras = { id: "W01", nombre: "Juan Perez", dni: "ABCDEFGH", celular: "987654321", estado: "ACTIVO" };
       expect(() => app.validateMesero(app.state, meseroLetras)).toThrow(/exactamente 8 dígitos numéricos/i);
+    });
+
+    test('TC-MS-09: Validar DNI duplicado', () => {
+      app.state.meseros = [{ id: "W01", nombre: "Juan", dni: "11111111", celular: "999888777", estado: "ACTIVO", activo: true }];
+      const meseroDup = { id: "W02", nombre: "Pedro", dni: "11111111", celular: "999555444", estado: "ACTIVO" };
+      
+      expect(() => app.validateMesero(app.state, meseroDup)).toThrow(/DNI ya esta registrado/);
     });
   });
 
@@ -148,6 +169,11 @@ describe('RestSystem MVP - Suite de Pruebas de Caja Negra (AVL & Particiones)', 
       app.state.productos = app.state.productos.map(p => p.id === "P01" ? { ...p, activo: false } : p);
       expect(app.state.productos[0].activo).toBe(false);
     });
+
+    test('TC-CA-09: Validar precio con más de 2 decimales', () => {
+      const pBadPrice = { id: "P01", nombre: "Soda", precio: "1.555", descripcion: "Soda rica", disponibilidad: true, estado: true };
+      expect(() => app.validateProducto(app.state, pBadPrice)).toThrow(/hasta 2 decimales/);
+    });
   });
 
   describe('Módulo: Validación de Textos (TC-TX)', () => {
@@ -186,6 +212,17 @@ describe('RestSystem MVP - Suite de Pruebas de Caja Negra (AVL & Particiones)', 
       const ordenNum = { id: "O-001", tipo: "PARA_LLEVAR", cliente: "Pedro 01" };
       expect(() => app.validateOrden(app.state, ordenNum)).toThrow(/NO puede contener números/i);
     });
+
+    test('TC-OR-05: Validar asignación de mesa/mesero en PARA LLEVAR', () => {
+      const ordenLlevarConMesa = { id: "O-001", tipo: "PARA_LLEVAR", cliente: "Ana", mesaId: "M1" };
+      expect(() => app.validateOrden(app.state, ordenLlevarConMesa)).toThrow(/No se permite mesa en ordenes PARA LLEVAR/);
+    });
+
+    test('TC-OR-06: Validar ID de orden duplicado', () => {
+      app.state.ordenes = [{ id: "O-001", tipo: "PARA_LLEVAR", cliente: "Ana", estado: "PENDIENTE" }];
+      const ordenDup = { id: "O-001", tipo: "PARA_LLEVAR", cliente: "Beto" };
+      expect(() => app.validateOrden(app.state, ordenDup)).toThrow(/ID de la orden ya existe/);
+    });
   });
 
   describe('Módulo: Modal Items', () => {
@@ -214,6 +251,24 @@ describe('RestSystem MVP - Suite de Pruebas de Caja Negra (AVL & Particiones)', 
       app.state.ordenes = [{ id: "O-001", items: [], estado: "PENDIENTE" }];
       const itemLetras = { ordenId: "O-001", productoId: "P01", cantidad: "Tres" };
       expect(() => app.validateOrdenItem(app.state, itemLetras)).toThrow(/numero entero/i);
+    });
+
+    test('TC-IT-05: Bloquear modificación de ítems en órdenes LISTO o PAGADO', () => {
+      app.state.ordenes = [{ id: "O-001", items: [], estado: "LISTO" }];
+      app.state.productos = [{ id: "P01", nombre: "Soda", precio: "5.00", estado: true, disponibilidad: true }];
+      const item = { ordenId: "O-001", productoId: "P01", cantidad: 1 };
+      
+      expect(() => app.validateOrdenItem(app.state, item)).toThrow(/no permite modificar items en este estado/);
+    });
+
+    test('TC-IT-06: Validar producto no disponible o inactivo', () => {
+      app.state.ordenes = [{ id: "O-001", items: [], estado: "PENDIENTE" }];
+      app.state.productos = [
+        { id: "P01", nombre: "Soda", precio: "5.00", estado: true, disponibilidad: false },
+        { id: "P02", nombre: "Agua", precio: "3.00", estado: false, disponibilidad: true }
+      ];
+      expect(() => app.validateOrdenItem(app.state, { ordenId: "O-001", productoId: "P01", cantidad: 1 })).toThrow(/debe estar DISPONIBLE/);
+      expect(() => app.validateOrdenItem(app.state, { ordenId: "O-001", productoId: "P02", cantidad: 1 })).toThrow(/debe estar ACTIVO/);
     });
   });
 

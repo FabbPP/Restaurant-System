@@ -164,9 +164,13 @@
       
       rows.forEach(row => {
         const productId = row.querySelector(".product-select").value;
-        const cantidad = parseInt(row.querySelector(".qty-input").value);
+        const qtyInput = row.querySelector(".qty-input").value;
+        const cantidad = parseInt(qtyInput);
         
-        if (productId && cantidad > 0) {
+        if (productId) {
+          if (isNaN(cantidad) || cantidad < 1 || cantidad > 99) {
+            throw new validation.ValidationError(["La cantidad debe estar entre 1 y 99."]);
+          }
           const product = state.productos.find(p => p.id === productId);
           if (product) {
             newItems.push({
@@ -233,9 +237,13 @@
     if (dni && (!utils.isDigits(dni) || dni.length !== 8)) {
       errors.push("El DNI debe tener exactamente 8 dígitos numéricos.");
     }
-    if (name) {
-      if (!utils.isValidNameLength(name)) errors.push("El nombre debe tener entre 2 y 50 caracteres.");
-      if (!utils.isStrictAlphaText(name)) errors.push("El nombre solo permite letras.");
+
+    if (!name) {
+      errors.push("El nombre del cliente es obligatorio.");
+    } else if (!utils.isValidNameLength(name)) {
+      errors.push("El nombre debe tener entre 2 y 50 caracteres.");
+    } else if (!utils.isStrictAlphaText(name)) {
+      errors.push("El nombre solo permite letras.");
     }
     
     if (!utils.isValidPrice(received)) {
@@ -267,7 +275,10 @@
       orden.clienteDni = dni;
       orden.clienteNombre = name;
 
-      await stateManager.saveItem(config.STORAGE_KEYS.ordenes, orden, true);
+      // Creamos una copia para el envío sin los items. 
+      // El backend prohíbe enviar la lista de items cuando la orden está en estado 'LISTO'.
+      const { items, ...ordenSinItems } = orden;
+      await stateManager.saveItem(config.STORAGE_KEYS.ordenes, ordenSinItems, true);
       // Refrescar estado para que el backend devuelva la mesa liberada y totales actualizados
       await stateManager.initState();
 
@@ -472,5 +483,17 @@
     });
   }
 
-  return { bindEvents };
+  return { 
+    bindEvents,
+    handleMesaSubmit,
+    handleMeseroSubmit,
+    handleProductoSubmit,
+    handleOrdenSubmit,
+    handleOrdenItemSubmit,
+    handleBillingSubmit,
+    updateBillingChange,
+    handleMesaActions,
+    handleMeseroActions,
+    handleProductoActions
+  };
 });

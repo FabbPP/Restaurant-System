@@ -414,17 +414,9 @@
       });
     }
 
-    // Preferir total devuelto por servidor si existe
-    const serverTotal = (typeof orden.total_cents === 'number') ? orden.total_cents : (typeof orden.totalCents === 'number' ? orden.totalCents : null);
-    let totalCents;
-    if (serverTotal !== null) {
-      totalCents = serverTotal;
-    } else {
-      const totals = stateManager.calculateOrderTotals(orden);
-      totalCents = totals.totalCents;
-    }
-    els.billingTotalAmount.textContent = `S/ ${utils.formatCents(totalCents)}`;
-    state.currentOrderTotalCents = totalCents;
+    const totals = stateManager.calculateOrderTotals(orden);
+    els.billingTotalAmount.textContent = `S/ ${utils.formatCents(totals.totalCents)}`;
+    state.currentOrderTotalCents = totals.totalCents;
     state.currentOrderIdForBilling = id;
 
     if (orden.cliente) {
@@ -508,7 +500,9 @@
   }
 
   function clearErrors() {
-    [els.mesaErrors, els.meseroErrors, els.productoErrors, els.ordenErrors, els.ordenItemErrors].forEach(e => e.innerHTML = "");
+    [els.mesaErrors, els.meseroErrors, els.productoErrors, els.ordenErrors, els.ordenItemErrors].forEach(e => {
+      if (e) e.innerHTML = "";
+    });
     document.querySelectorAll(".error-message").forEach(s => { s.textContent = ""; s.style.display = "none"; });
   }
 
